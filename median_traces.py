@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from __future__ import division
+from __future__ import division, print_function
 
 from glob import glob
 from itertools import izip
@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
-from sklearn import svm, cross_validation
+from sklearn import svm, cross_validation, decomposition
 from sklearn.metrics import accuracy_score as accuracy
 
 __author__ = "Michele Orru`"
@@ -20,6 +20,8 @@ __license__ = """"THE BEER-WARE LICENSE" (Revision 42):
  this stuff is worth it, you can buy me a beer in return.
 """
 
+__all__ = ['g', 'neighbours', 'extract_dataset', 'extract_feature', 'learn']
+
 def g(a, b):
     p = np.sign(a*b)
     if p == -1: return 1
@@ -28,8 +30,8 @@ def g(a, b):
 
 def neighbours(x, y):
     return [
-        (x-1, y-1), (x, y-1), (x+1, y-1), (x+1, y),
-        (x+1, y+1), (x, y+1), (x-1, y+1), (x-1, y)
+        (x-1, y-1), (x-1, y), (x-1, y+1), (x, y+1),
+        (x+1, y+1), (x+1, y), (x+1, y-1), (x, y-1)
     ]
 
 def extract_dataset(dataset_type):
@@ -39,7 +41,7 @@ def extract_dataset(dataset_type):
         return np.load(base_path + 'features.npy')
     except:
         features = []
-        for image_file in glob(base_path + '*.tif'):
+        for image_file in sorted(glob(base_path + '*.tif')):
             print('processing: {}'.format(image_file))
             features.append(extract_feature(image_file))
 
@@ -48,12 +50,13 @@ def extract_dataset(dataset_type):
         return features
 
 
-directions = ('h', 'v', 'dl', 'dr')
+directions = ('h', 'dr', 'v', 'dl')
 make_histogram = lambda: np.zeros(256, dtype='int')
 
 def extract_feature(image_file):
     # monochrome image
-    img = np.asarray(Image.open(image_file).convert('L'), dtype='int32')
+    img = np.asarray(Image.open(image_file), dtype='int')
+    # img = np.asarray(Image.open(image_file).convert('L'), dtype='int')
 
     # compute second_order ternary patterns
     cimg = img[1:-1, 1:-1]
@@ -78,7 +81,7 @@ def extract_feature(image_file):
                 'v':  make_histogram(),
                 'dr': make_histogram(),
                 'dl': make_histogram(),
-        }
+        },
     )
 
     for (px, py) in indices:
@@ -86,47 +89,70 @@ def extract_feature(image_file):
             # centred, first order derivate of image
             p = i[direction][px, py]
 
-            ltpp = 0
-            ltpn = 0
+            ltpp = ['0', ] * 8
+            ltpn = ['0', ] * 8
             for dc, (x, y) in enumerate(neighbours(px, py)):
-                ltp = g(p, i[direction][x, y])
-                if ltp == 1: ltpp += 1 << dc
-                elif ltp == -1: ltpn += 1 << dc
-            else:
-                histograms['ltpp'][direction][ltpp] += 1
-                histograms['ltpn'][direction][ltpn] += 1
+                ltp = g(i[direction][x, y], p)
+                if ltp == 1: ltpp[dc] = '1'
+                if ltp == -1: ltpn[dc] = '1'
+
+            ltpp = int(''.join(ltpp), 2)
+            ltpn = int(''.join(ltpn), 2)
+            histograms['ltpp'][direction][ltpp] += 1
+            histograms['ltpn'][direction][ltpn] += 1
 
     return np.concatenate([histograms[sign][direction]
                            for direction in directions
                            for sign in ('ltpp', 'ltpn')])
 
 
+def plot(a, b):
+    features_a = extract_dataset(a)[:50]
+    features_b = extract_dataset(b)[:50]
+
+    xs = np.arange(0, features_a.shape[1])
+    for fa, fb in izip(features_a, features_b):
+        plt.scatter(xs, fa,  c='red', alpha=.5)
+        plt.scatter(xs, fb, c='blue', alpha=.5)
+
 def learn(a, b):
-    svc = svm.SVC(kernel='rbf', C=1., gamma=1/32)
-    features_a = extract_dataset(a)
-    features_b = extract_dataset(b)
-    xs = np.concatenate((features_a, features_b))
-    ys = np.concatenate((np.repeat(a, len(features_a)),
-                         np.repeat(b, len(features_b))))
-    # shuffle dataset
-    indexes = np.random.permutation(len(xs))
-    xs = xs[indexes]
-    ys = ys[indexes]
+    ori = np.load('dataset/ori/features.npy')
+    mf5 = np.load('dataset/mf5/features.npy')
 
-    folds = cross_validation.KFold(len(xs), n_folds=5)
-    for training, testing in folds:
-        x_training = xs[training]
-        y_training = ys[training]
-        x_testing = xs[testing]
-        y_testing = ys[testing]
-        svc.fit(x_training, y_training)
+    ori = np.array([np.reshape(x, (256, -1))for x in ori])
+    mf5 = np.array([np.reshape(x, (256, -1)) for x in mf5])
 
-        predicted = svc.predict(x_testing)
-        a = accuracy(predicted, y_testing)
+    features_x = np.concatenate((ori, mf5))
+    features_y = np.concatenate((
+        np.repeat('ori', len(ori)),
+        np.repeat('mf5', len(mf5))))
+    i = np.random.permutation(len(ori) + len(mf5))
+    features_x = features_x[i]
+    features_y = features_y[i]
 
-        print('achieving {}'.format(a))
+    clf = svm.SVC()
 
-    return svc
+    xs = features_x[:800]
+    ys = features_y[:800]
+
+    xs = xs.reshape(800, -1)
+    clf.fit(xs, ys)
+
+    xs = features_x[400:]
+    samples = len(xs)
+    ys = features_y[400:]
+    xs = xs.reshape(samples, -1)
+    clf.fit(xs, ys)
+    pred = clf.predict(xs)
+    print(accuracy(pred, ys))
+
+    return clf
+
+def test(a, b, image_file):
+    clf = learn(a, b)
+    f = extract_feature(image_file)
+
+    print(clf.predict(f))
 
 
 if __name__ == '__main__':
@@ -136,5 +162,9 @@ if __name__ == '__main__':
         extract_dataset(sys.argv[2])
     elif len(sys.argv) == 2 and sys.argv[1] == 'learn':
         learn()
+    elif len(sys.argv) == 4 and sys.argv[1] == 'plot':
+        plot(sys.argv[2], sys.argv[3])
+    elif len(sys.argv) == 4 and sys.argv[1] == 'test':
+        test(sys.argv[1], sys.argv[2], sys.argv[3])
     else:
         sys.exit(1)
