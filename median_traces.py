@@ -10,7 +10,9 @@ import numpy as np
 from PIL import Image
 
 from sklearn import svm, cross_validation, decomposition
+from sklearn.grid_search import GridSearchCV
 from sklearn.metrics import accuracy_score as accuracy
+from sklearn.preprocessing import normalize
 
 __author__ = "Michele Orru`"
 __email__ = "michele.orru@studenti.unitn.it"
@@ -116,55 +118,33 @@ def plot(a, b):
         plt.scatter(xs, fb, c='blue', alpha=.5)
 
 def learn(a, b):
-    ori = np.load('dataset/ori/features.npy')
-    mf5 = np.load('dataset/mf5/features.npy')
+    features_a = np.array(extract_dataset(a), dtype='float64')
+    features_b = np.array(extract_dataset(b), dtype='float64')
+    features = normalize(np.concatenate((features_a, features_b)))
+    pca = decomposition.KernelPCA(kernel='linear', n_components=220)
 
-    ori = np.array([np.reshape(x, (256, -1))for x in ori])
-    mf5 = np.array([np.reshape(x, (256, -1)) for x in mf5])
+    xs = pca.fit_transform(features)
+    ys = np.concatenate((
+        np.repeat(a, len(features_a)),
+        np.repeat(b, len(features_b))))
 
-    features_x = np.concatenate((ori, mf5))
-    features_y = np.concatenate((
-        np.repeat('ori', len(ori)),
-        np.repeat('mf5', len(mf5))))
-    i = np.random.permutation(len(ori) + len(mf5))
-    features_x = features_x[i]
-    features_y = features_y[i]
-
-    clf = svm.SVC()
-
-    xs = features_x[:800]
-    ys = features_y[:800]
-
-    xs = xs.reshape(800, -1)
-    clf.fit(xs, ys)
-
-    xs = features_x[400:]
-    samples = len(xs)
-    ys = features_y[400:]
-    xs = xs.reshape(samples, -1)
-    clf.fit(xs, ys)
-    pred = clf.predict(xs)
-    print(accuracy(pred, ys))
-
-    return clf
-
-def test(a, b, image_file):
-    clf = learn(a, b)
-    f = extract_feature(image_file)
-
-    print(clf.predict(f))
-
+    parameters = {
+        'kernel': ['linear', 'rbf'],
+        'C': 2**np.arange(0, 10, 0.5),
+        'gamma': 2**np.arange(-5, 3, 0.5),
+    }
+    grid = GridSearchCV(svm.SVC(), parameters, n_jobs=3, verbose=5, cv=5)
+    clf = grid.fit(xs, ys)
+    return pca, clf
 
 if __name__ == '__main__':
     import sys
 
     if len(sys.argv) == 3 and  sys.argv[1] == 'extract':
         extract_dataset(sys.argv[2])
-    elif len(sys.argv) == 2 and sys.argv[1] == 'learn':
-        learn()
+    elif len(sys.argv) == 4 and sys.argv[1] == 'learn':
+        learn(sys.argv[2], sys.argv[3])
     elif len(sys.argv) == 4 and sys.argv[1] == 'plot':
         plot(sys.argv[2], sys.argv[3])
-    elif len(sys.argv) == 4 and sys.argv[1] == 'test':
-        test(sys.argv[1], sys.argv[2], sys.argv[3])
     else:
         sys.exit(1)
