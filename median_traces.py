@@ -114,7 +114,7 @@ def plot(a, b):
 
     xs = np.arange(0, features_a.shape[1])
     for fa, fb in izip(features_a, features_b):
-        plt.scatter(xs, fa,  c='red', alpha=.5)
+        plt.scatter(xs, fa, c='red', alpha=.5)
         plt.scatter(xs, fb, c='blue', alpha=.5)
 
 def learn(a, b):
@@ -124,9 +124,8 @@ def learn(a, b):
     pca = decomposition.KernelPCA(kernel='linear', n_components=220)
 
     xs = pca.fit_transform(features)
-    ys = np.concatenate((
-        np.repeat(a, len(features_a)),
-        np.repeat(b, len(features_b))))
+    ys = np.concatenate((np.repeat(a, len(features_a)),
+                         np.repeat(b, len(features_b))))
 
     parameters = {
         'kernel': ['linear', 'rbf'],
