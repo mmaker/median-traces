@@ -1,4 +1,15 @@
 #!/usr/bin/env python
+"""Median Traces
+
+Usage:
+  median_traces.py extract <dataset> <dataset>
+  median_traces.py learn <dataset> <dataset>
+  median_traces.py -h | --help
+
+Options:
+  -h --help     Show this screen.
+
+"""
 from __future__ import division, print_function
 
 from glob import glob
@@ -6,6 +17,7 @@ from itertools import izip
 from multiprocessing import Pool
 from os.path import join
 
+from docopt import docopt
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
@@ -16,6 +28,7 @@ from sklearn.metrics import accuracy_score as accuracy
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import normalize
 
+__version__ = float('nan')
 __author__ = "Michele Orru`"
 __email__ = "michele.orru@studenti.unitn.it"
 __license__ = """"THE BEER-WARE LICENSE" (Revision 42):
@@ -27,6 +40,9 @@ __license__ = """"THE BEER-WARE LICENSE" (Revision 42):
 __all__ = ['g', 'neighbours', 'extract_dataset', 'extract_feature', 'learn']
 
 def g(a, b):
+    # hey, this shit makes g() 10s/50imgs faster
+    if a == 0 or b == 0: return -1
+
     p = np.sign(a*b)
     if p == -1: return 1
     if p == 1: return  0
@@ -39,13 +55,14 @@ def neighbours(x, y):
     ]
 
 def extract_dataset(dataset_type):
-    base_path = join('dataset', dataset_type, '')
+    base_path = join('testcases', dataset_type, '')
 
     try:
         features = np.load(base_path + 'features.npy')
     except:
-        pool = Pool()
-        features = pool.map(extract_feature, glob(base_path + '*.tif'))
+        files = glob(base_path + '*.tif') + glob(base_path + '*.jpeg')
+#        features = [extract_feature(file) for file in files]
+        features = Pool().map(extract_feature, files)
         features = np.array(features, dtype='float64')
         # caching
         np.save(base_path + 'features', features)
@@ -140,14 +157,10 @@ def learn(a, b):
     print('{} vs {}: {:3.3f}'.format(a, b, clf.best_score_))
     return clf
 
-if __name__ == '__main__':
-    import sys
 
-    if len(sys.argv) == 3 and  sys.argv[1] == 'extract':
-        extract_dataset(sys.argv[2])
-    elif len(sys.argv) == 4 and sys.argv[1] == 'learn':
-        learn(sys.argv[2], sys.argv[3])
-    elif len(sys.argv) == 4 and sys.argv[1] == 'plot':
-        plot(sys.argv[2], sys.argv[3])
-    else:
-        sys.exit(1)
+if __name__ == '__main__':
+    arguments = docopt(__doc__, version=__version__)
+    if arguments['learn']:
+        learn(arguments['<name>'])
+    elif arguments['extract']:
+        extract(arguments['<name>'])
