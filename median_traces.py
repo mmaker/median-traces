@@ -3,6 +3,7 @@ from __future__ import division, print_function
 
 from glob import glob
 from itertools import izip
+from multiprocessing import Pool
 from os.path import join
 
 import matplotlib.pyplot as plt
@@ -41,15 +42,14 @@ def extract_dataset(dataset_type):
     base_path = join('dataset', dataset_type, '')
 
     try:
-        return np.load(base_path + 'features.npy')
+        features = np.load(base_path + 'features.npy')
     except:
-        features = []
-        for image_file in sorted(glob(base_path + '*.tif')):
-            print('processing: {}'.format(image_file))
-            features.append(extract_feature(image_file))
-
-        features = np.asarray(features)
+        pool = Pool()
+        features = pool.map(extract_feature, glob(base_path + '*.tif'))
+        features = np.array(features, dtype='float64')
+        # caching
         np.save(base_path + 'features', features)
+    finally:
         return features
 
 
@@ -57,6 +57,7 @@ directions = ('h', 'dr', 'v', 'dl')
 make_histogram = lambda: np.zeros(256, dtype='int')
 
 def extract_feature(image_file):
+    print('processing {}'.format(image_file))
     # monochrome image
     img = np.asarray(Image.open(image_file), dtype='int')
     # img = np.asarray(Image.open(image_file).convert('L'), dtype='int')
