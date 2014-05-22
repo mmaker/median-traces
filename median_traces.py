@@ -124,7 +124,7 @@ def learn(a, b):
     features_b = np.array(extract_dataset(b), dtype='float64')
     features = np.concatenate((features_a, features_b))
     pipeline = Pipeline([
-        ('pca', decomposition.KernelPCA(kernel='linear', n_components=220)),
+        ('pca', decomposition.KernelPCA(kernel='linear')),
         ('clf', svm.SVC(kernel='rbf')),
     ])
     xs = normalize(features)
@@ -137,7 +137,7 @@ def learn(a, b):
     }
     grid = GridSearchCV(pipeline, parameters, n_jobs=3, cv=5)
     clf = grid.fit(xs, ys)
-    print('{} vs {}: {.3f}'.format(a, b, clf.best_score_))
+    print('{} vs {}: {:3.3f}'.format(a, b, clf.best_score_))
     return clf
 
 if __name__ == '__main__':
