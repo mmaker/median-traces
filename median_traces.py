@@ -12,6 +12,7 @@ from PIL import Image
 from sklearn import svm, cross_validation, decomposition
 from sklearn.grid_search import GridSearchCV
 from sklearn.metrics import accuracy_score as accuracy
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import normalize
 
 __author__ = "Michele Orru`"
@@ -120,21 +121,23 @@ def plot(a, b):
 def learn(a, b):
     features_a = np.array(extract_dataset(a), dtype='float64')
     features_b = np.array(extract_dataset(b), dtype='float64')
-    features = normalize(np.concatenate((features_a, features_b)))
-    pca = decomposition.KernelPCA(kernel='linear', n_components=220)
-
-    xs = pca.fit_transform(features)
+    features = np.concatenate((features_a, features_b))
+    pipeline = Pipeline([
+        ('pca', decomposition.KernelPCA(kernel='linear', n_components=220)),
+        ('clf', svm.SVC(kernel='rbf')),
+    ])
+    xs = normalize(features)
     ys = np.concatenate((np.repeat(a, len(features_a)),
                          np.repeat(b, len(features_b))))
-
     parameters = {
-        'kernel': ['linear', 'rbf'],
-        'C': 2**np.arange(0, 10, 0.5),
-        'gamma': 2**np.arange(-5, 3, 0.5),
+#        'kernel': ['linear', 'rbf'],
+        'clf__C': 2**np.arange(0, 10, 0.5),
+        'clf__gamma': 2**np.arange(-5, 3, 0.5),
     }
-    grid = GridSearchCV(svm.SVC(), parameters, n_jobs=3, verbose=5, cv=5)
+    grid = GridSearchCV(pipeline, parameters, n_jobs=3, cv=5)
     clf = grid.fit(xs, ys)
-    return pca, clf
+    print('{} vs {}: {.3f}'.format(a, b, clf.best_score_))
+    return clf
 
 if __name__ == '__main__':
     import sys
