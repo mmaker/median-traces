@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-"""Median Traces
+"""Median Traces; an implementation of
+Revealing the Traces of Median Filtering Using High-Order Local Ternary Patterns.
 
 Usage:
   median_traces.py extract <dataset> <dataset>
@@ -55,12 +56,12 @@ def neighbours(x, y):
     ]
 
 def extract_dataset(dataset_type):
-    base_path = join('testcases', dataset_type, '')
+    base_path = join('dataset', dataset_type, '')
 
     try:
         features = np.load(base_path + 'features.npy')
     except:
-        files = glob(base_path + '*.tif') + glob(base_path + '*.jpeg')
+        files = glob(base_path + '*.jpeg')
 #        features = [extract_feature(file) for file in files]
         features = Pool().map(extract_feature, files)
         features = np.array(features, dtype='float64')
@@ -140,27 +141,27 @@ def learn(a, b):
     features_a = np.array(extract_dataset(a), dtype='float64')
     features_b = np.array(extract_dataset(b), dtype='float64')
     features = np.concatenate((features_a, features_b))
-    pipeline = Pipeline([
-        ('pca', decomposition.KernelPCA(kernel='linear')),
-        ('clf', svm.SVC(kernel='rbf')),
-    ])
-    xs = normalize(features)
+
+    pca = decomposition.KernelPCA(kernel='linear')
+    clf = svm.SVC(kernel='rbf')
+
+    xs = pca.fit_transform(normalize(features))
     ys = np.concatenate((np.repeat(a, len(features_a)),
                          np.repeat(b, len(features_b))))
     parameters = {
 #        'kernel': ['linear', 'rbf'],
-        'clf__C': 2**np.arange(0, 10, 0.5),
-        'clf__gamma': 2**np.arange(-5, 3, 0.5),
+        'C': 2**np.arange(0, 10, 0.5),
+        'gamma': 2**np.arange(-5, 3, 0.5),
     }
-    grid = GridSearchCV(pipeline, parameters, n_jobs=3, cv=5)
+    grid = GridSearchCV(clf, parameters, n_jobs=3, cv=5)
     clf = grid.fit(xs, ys)
     print('{} vs {}: {:3.3f}'.format(a, b, clf.best_score_))
-    return clf
+    return Pipeline([('pca', pca), ('clf', clf)])
 
 
 if __name__ == '__main__':
     arguments = docopt(__doc__, version=__version__)
     if arguments['learn']:
-        learn(arguments['<name>'])
+        learn(*arguments['<dataset>'])
     elif arguments['extract']:
-        extract(arguments['<name>'])
+        extract(*arguments['<dataset>'])
