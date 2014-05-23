@@ -88,7 +88,7 @@ mkdir ../all-256
 find . -name 'ucid00[0-1]*.tif' -exec convert {} ../all-256/{} \;
 find . -name 'ucid00[2-3]*.tif' -exec convert {} -define convolve:scale=! -morphology Convolve square:3 ../all-256/{} \;
 find . -name 'ucid00[4-5]*.tif' -exec convert {} -resize 110% -resize 128x128 ../all-256/{} \;
-find . -name 'ucid00[6-7].tif' -exec convert {} -gaussian-blur 0.5 ../all-256/{} \;
+find . -name 'ucid00[6-7]*.tif' -exec convert {} -gaussian-blur 0.5 ../all-256/{} \;
 
 cd ..
 #### JPEG compression ####
