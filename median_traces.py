@@ -1,14 +1,19 @@
 #!/usr/bin/env python
-"""Median Traces; an implementation of
-Revealing the Traces of Median Filtering Using High-Order Local Ternary Patterns.
+# coding: UTF-8
+"""Median Traces; an implementation of \
+«Revealing the Traces of Median Filtering Using High-Order Local Ternary Patterns».
 
 Usage:
-  median_traces.py extract <dataset> <dataset>
-  median_traces.py learn <dataset> <dataset>
+  median_traces.py extract [options] <dataset>
+  median_traces.py learn   [options] <dataset> <dataset>
+  median_traces.py plot    [options] <dataset>
   median_traces.py -h | --help
 
 Options:
-  -h --help     Show this screen.
+  -h --help       Show this screen.
+  --path=DIR      Specifies dataset path [default: dataset/].
+  --regex=REGEX   Specifies regex for locating images [default: *.jpeg].
+
 
 """
 from __future__ import division, print_function
@@ -40,6 +45,12 @@ __license__ = """"THE BEER-WARE LICENSE" (Revision 42):
 
 __all__ = ['g', 'neighbours', 'extract_dataset', 'extract_feature', 'learn']
 
+DIRECTIONS = ('h', 'dr', 'v', 'dl')
+
+dataset_path = 'dataset'
+images_regex = '*.jpeg'
+make_histogram = lambda: np.zeros(256, dtype='int')
+
 def g(a, b):
     # hey, this shit makes g() 10s/50imgs faster
     if a == 0 or b == 0: return -1
@@ -56,23 +67,19 @@ def neighbours(x, y):
     ]
 
 def extract_dataset(dataset_type):
-    base_path = join('dataset', dataset_type, '')
+    base_path = join(dataset_path, dataset_type, '')
 
     try:
         features = np.load(base_path + 'features.npy')
     except:
-        files = glob(base_path + '*.jpeg')
-#        features = [extract_feature(file) for file in files]
+        files = glob(base_path + images_regex)
+        # features = [extract_feature(file) for file in files]
         features = Pool().map(extract_feature, files)
         features = np.array(features, dtype='float64')
         # caching
         np.save(base_path + 'features', features)
     finally:
         return features
-
-
-directions = ('h', 'dr', 'v', 'dl')
-make_histogram = lambda: np.zeros(256, dtype='int')
 
 def extract_feature(image_file):
     print('processing {}'.format(image_file))
@@ -83,11 +90,10 @@ def extract_feature(image_file):
     # compute second_order ternary patterns
     cimg = img[1:-1, 1:-1]
     # first-order derivate
-    i = {
-        'h': cimg - img[1:-1, 2:],
-        'v': cimg - img[:-2, 1:-1],
-        'dr': cimg - img[:-2, 2:],
-        'dl': cimg - img[:-2, :-2]
+    i = {'h': cimg - img[1:-1, 2:],
+         'v': cimg - img[:-2, 1:-1],
+         'dr': cimg - img[:-2, 2:],
+         'dl': cimg - img[:-2, :-2],
     }
 
     width, height = cimg.shape
@@ -107,7 +113,7 @@ def extract_feature(image_file):
     )
 
     for (px, py) in indices:
-        for direction in directions:
+        for direction in DIRECTIONS:
             # centred, first order derivate of image
             p = i[direction][px, py]
 
@@ -124,7 +130,7 @@ def extract_feature(image_file):
             histograms['ltpn'][direction][ltpn] += 1
 
     return np.concatenate([histograms[sign][direction]
-                           for direction in directions
+                           for direction in DIRECTIONS
                            for sign in ('ltpp', 'ltpn')])
 
 
@@ -160,8 +166,14 @@ def learn(a, b):
 
 
 if __name__ == '__main__':
-    arguments = docopt(__doc__, version=__version__)
-    if arguments['learn']:
-        learn(*arguments['<dataset>'])
-    elif arguments['extract']:
-        extract(*arguments['<dataset>'])
+    args = docopt(__doc__, version=__version__)
+
+    dataset_path = args['--path']
+    images_regex = args['--regex']
+
+    if args['learn']:
+        learn(*args['<dataset>'])
+    elif args['extract']:
+        extract_dataset(*args['<dataset>'])
+    elif args['plot']:
+        plot(*args['<dataset>'])
