@@ -26,6 +26,7 @@ from glob import glob
 from itertools import izip
 from multiprocessing import Pool
 from operator import add
+import cPickle as pickle
 
 from docopt import docopt
 import matplotlib.pyplot as plt
@@ -33,7 +34,7 @@ import numpy as np
 from PIL import Image
 
 from sklearn import svm, cross_validation, decomposition
-from sklearn.externals import joblib
+#from sklearn.externals import joblib
 from sklearn.grid_search import GridSearchCV
 from sklearn.metrics import accuracy_score as accuracy
 from sklearn.pipeline import Pipeline
@@ -52,11 +53,20 @@ __all__ = ['g', 'neighbours', 'extract_dataset', 'extract_feature',
            'extract_feature_from_file', 'learn', 'test']
 
 DIRECTIONS = ('h', 'dr', 'v', 'dl')
-CLF_FILE_TEMPLATE = 'clf-{}_vs_{}'.format
+CLF_FILE_TEMPLATE ='{}_vs_{}.clf'.format
 
 dataset_path = 'dataset'
 images_regex = '*.jpeg'
 make_histogram = lambda: np.zeros(256, dtype='int')
+
+
+def _load(file):
+    with open(file, 'rb') as f:
+        return pickle.load(f)
+
+def _dump(obj, file):
+    with open(file, 'wb') as f:
+        return pickle.dump(obj, f)
 
 def g(a, b):
     # hey, this shit makes g() 10s/50imgs faster
@@ -184,14 +194,13 @@ def learn(a, b):
         'C': 2**np.arange(0, 10, 0.5),
         'gamma': 2**np.arange(-5, 3, 0.5),
     }
-    grid = GridSearchCV(clf, parameters, n_jobs=3, cv=5)
+    grid = GridSearchCV(clf, parameters, n_jobs=4, cv=5)
     clf = grid.fit(xs, ys)
     print('{} vs {}: {:3.3f}'.format(a, b, clf.best_score_))
     pipeline = Pipeline([('pca', pca), ('clf', clf)])
 
     # caching
-    pipeline_file = os.path.join(dataset_path, CLF_FILE_TEMPLATE(a, b))
-    joblib.dump(pipeline, pipeline_file)
+    _dump(pipeline, CLF_FILE_TEMPLATE(a, b))
 
     return pipeline
 
@@ -208,7 +217,7 @@ def test(a, b, targets):
     """
     # load classificator. If not found, create it.
     try:
-        clf = joblib.load(CLF_FILE_TEMPLATE(a, b))
+        clf = _load(CLF_FILE_TEMPLATE(a, b))
     except IOError, ValueError:
         clf = learn(a, b)
 
