@@ -6,14 +6,14 @@
 Usage:
   median_traces.py extract [options] <dataset>
   median_traces.py learn   [options] <dataset> <dataset>
-  median_traces.py plot    [options] <dataset>
+  median_traces.py plot    [options] <dataset> <dataset> [--samples INT]
   median_traces.py -h | --help
 
 Options:
   -h --help       Show this screen.
   --path=DIR      Specifies dataset path [default: dataset/].
   --regex=REGEX   Specifies regex for locating images [default: *.jpeg].
-
+  --samples=INT   Specifies the number of samples when plotting [default: 30].
 
 """
 from __future__ import division, print_function
@@ -134,14 +134,18 @@ def extract_feature(image_file):
                            for sign in ('ltpp', 'ltpn')])
 
 
-def plot(a, b):
-    features_a = extract_dataset(a)[:50]
-    features_b = extract_dataset(b)[:50]
+def plot(a, b, samples=30):
+    """
+    Merge with different colors, the resulting histograms of two datasets.
+    """
+    features_a = extract_dataset(a)[:samples]
+    features_b = extract_dataset(b)[:samples]
 
     xs = np.arange(0, features_a.shape[1])
     for fa, fb in izip(features_a, features_b):
         plt.scatter(xs, fa, c='red', alpha=.5)
         plt.scatter(xs, fb, c='blue', alpha=.5)
+    plt.show()
 
 def learn(a, b):
     features_a = np.array(extract_dataset(a), dtype='float64')
@@ -176,4 +180,5 @@ if __name__ == '__main__':
     elif args['extract']:
         extract_dataset(*args['<dataset>'])
     elif args['plot']:
-        plot(*args['<dataset>'])
+        samples = int(args['--samples'])
+        plot(*args['<dataset>'], samples=samples)
