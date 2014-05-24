@@ -7,21 +7,24 @@ Usage:
   median_traces.py extract [options] <dataset>
   median_traces.py learn   [options] <dataset> <dataset>
   median_traces.py plot    [options] <dataset> <dataset> [--samples INT]
+  median_traces.py test    [options] <dataset> <dataset> <targets>...
   median_traces.py -h | --help
 
 Options:
-  -h --help       Show this screen.
-  --path=DIR      Specifies dataset path [default: dataset/].
-  --regex=REGEX   Specifies regex for locating images [default: *.jpeg].
-  --samples=INT   Specifies the number of samples when plotting [default: 30].
+  -h --help           Show this screen.
+  -p, --path=DIR      Specifies dataset path [default: dataset/].
+  -r, --regex=REGEX   Specifies regex for locating images [default: *.jpeg].
+  --samples=INT       Specifies the number of samples when plotting [default: 30].
 
 """
 from __future__ import division, print_function
 
+import os.path
+from functools import reduce
 from glob import glob
 from itertools import izip
 from multiprocessing import Pool
-from os.path import join
+from operator import add
 
 from docopt import docopt
 import matplotlib.pyplot as plt
@@ -29,6 +32,7 @@ import numpy as np
 from PIL import Image
 
 from sklearn import svm, cross_validation, decomposition
+from sklearn.externals import joblib
 from sklearn.grid_search import GridSearchCV
 from sklearn.metrics import accuracy_score as accuracy
 from sklearn.pipeline import Pipeline
@@ -43,9 +47,11 @@ __license__ = """"THE BEER-WARE LICENSE" (Revision 42):
  this stuff is worth it, you can buy me a beer in return.
 """
 
-__all__ = ['g', 'neighbours', 'extract_dataset', 'extract_feature', 'learn']
+__all__ = ['g', 'neighbours', 'extract_dataset', 'extract_feature',
+           'extract_feature_from_file', 'learn', 'test']
 
 DIRECTIONS = ('h', 'dr', 'v', 'dl')
+CLF_FILE_TEMPLATE = 'clf-{}_vs_{}'.format
 
 dataset_path = 'dataset'
 images_regex = '*.jpeg'
@@ -67,26 +73,36 @@ def neighbours(x, y):
     ]
 
 def extract_dataset(dataset_type):
-    base_path = join(dataset_path, dataset_type, '')
+    base_path = os.path.join(dataset_path, dataset_type, '')
 
     try:
         features = np.load(base_path + 'features.npy')
     except:
         files = glob(base_path + images_regex)
         # features = [extract_feature(file) for file in files]
-        features = Pool().map(extract_feature, files)
+        features = Pool().map(extract_feature_from_file, files)
         features = np.array(features, dtype='float64')
         # caching
         np.save(base_path + 'features', features)
     finally:
         return features
 
-def extract_feature(image_file):
+def extract_feature_from_file(image_file):
+    """
+    Given an image path `image_file`, extract the monochrome grayscale 8-bit
+    image and produce the second-order LTP histogram from it.
+    """
     print('processing {}'.format(image_file))
-    # monochrome image
-    img = np.asarray(Image.open(image_file), dtype='int')
-    # img = np.asarray(Image.open(image_file).convert('L'), dtype='int')
+    img = np.asarray(Image.open(image_file).convert('L'), dtype='int')
+    return extract_feature(img)
 
+def extract_feature(img):
+    """
+    Extract the second-order, LTP features from the image matrix `img`.
+
+    :param: `img` the image matrix. `dtype=int` is assumed.
+    :return: the concatenated histograms, one for each direction and sign.
+    """
     # compute second_order ternary patterns
     cimg = img[1:-1, 1:-1]
     # first-order derivate
@@ -147,6 +163,7 @@ def plot(a, b, samples=30):
         plt.scatter(xs, fb, c='blue', alpha=.5)
     plt.show()
 
+
 def learn(a, b):
     features_a = np.array(extract_dataset(a), dtype='float64')
     features_b = np.array(extract_dataset(b), dtype='float64')
@@ -166,7 +183,35 @@ def learn(a, b):
     grid = GridSearchCV(clf, parameters, n_jobs=3, cv=5)
     clf = grid.fit(xs, ys)
     print('{} vs {}: {:3.3f}'.format(a, b, clf.best_score_))
-    return Pipeline([('pca', pca), ('clf', clf)])
+    pipeline = Pipeline([('pca', pca), ('clf', clf)])
+
+    # caching
+    pipeline_file = os.path.join(dataset_path, CLF_FILE_TEMPLATE(a, b))
+    joblib.dump(pipeline, pipeline_file)
+
+    return pipeline
+
+def test(a, b, targets):
+    try:
+        clf = joblib.load(CLF_FILE_TEMPLATE(a, b))
+    except IOError, ValueError:
+        clf = learn(a, b)
+
+    # change directories into
+    targets = [target if not os.path.isdir(target) else
+               os.path.join(target, images_regex)
+               for target in targets
+               # commodity, remove any 'feature.npy', if present
+               if not target.endswith('features.npy')
+    ]
+    files = reduce(add, map(glob, targets))
+    # features = [extract_feature(file) for file in files]
+    tests = Pool().map(extract_feature_from_file, files)
+    tests = np.array(tests, dtype='float64')
+
+    predicted = clf.predict(tests)
+    print(', '.join(predicted))
+    return predicted
 
 
 if __name__ == '__main__':
@@ -174,11 +219,22 @@ if __name__ == '__main__':
 
     dataset_path = args['--path']
     images_regex = args['--regex']
+    datasets = args['<dataset>']
 
-    if args['learn']:
-        learn(*args['<dataset>'])
-    elif args['extract']:
-        extract_dataset(*args['<dataset>'])
+    if args['extract']:
+        dataset, = datasets
+        extract_dataset(dataset)
+
+    elif args['learn']:
+        a, b = datasets
+        learn(a, b)
+
     elif args['plot']:
+        a, b = datasets
         samples = int(args['--samples'])
-        plot(*args['<dataset>'], samples=samples)
+        plot(a, b, samples=samples)
+
+    elif args['test']:
+        a, b = datasets
+        targets = args['<targets>']
+        test(a, b, targets)
