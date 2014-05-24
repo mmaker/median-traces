@@ -12,6 +12,7 @@ Usage:
 
 Options:
   -h --help           Show this screen.
+  -v --version        Print version number.
   -p, --path=DIR      Specifies dataset path [default: dataset/].
   -r, --regex=REGEX   Specifies regex for locating images [default: *.jpeg].
   --samples=INT       Specifies the number of samples when plotting [default: 30].
@@ -91,6 +92,8 @@ def extract_feature_from_file(image_file):
     """
     Given an image path `image_file`, extract the monochrome grayscale 8-bit
     image and produce the second-order LTP histogram from it.
+
+    :rtype: np.array
     """
     print('processing {}'.format(image_file))
     img = np.asarray(Image.open(image_file).convert('L'), dtype='int')
@@ -100,8 +103,9 @@ def extract_feature(img):
     """
     Extract the second-order, LTP features from the image matrix `img`.
 
-    :param: `img` the image matrix. `dtype=int` is assumed.
+    :param img: the image matrix. `dtype=int` is assumed.
     :return: the concatenated histograms, one for each direction and sign.
+    :rtype: np.array
     """
     # compute second_order ternary patterns
     cimg = img[1:-1, 1:-1]
@@ -192,12 +196,23 @@ def learn(a, b):
     return pipeline
 
 def test(a, b, targets):
+    """
+    Specifically test a number of images after having classified the two
+    datasets `a` and `b`.
+
+    :param str a: dataset
+    :param str b:
+    :param list targets: list of glob patterns, directories, single files.
+
+    :return: The list of predicted values.
+    """
+    # load classificator. If not found, create it.
     try:
         clf = joblib.load(CLF_FILE_TEMPLATE(a, b))
     except IOError, ValueError:
         clf = learn(a, b)
 
-    # change directories into
+    # Create test cases
     targets = [target if not os.path.isdir(target) else
                os.path.join(target, images_regex)
                for target in targets
@@ -210,8 +225,11 @@ def test(a, b, targets):
     tests = np.array(tests, dtype='float64')
 
     predicted = clf.predict(tests)
-    print(', '.join(predicted))
-    return predicted
+
+    for file, prediction in izip(files, predicted):
+        print('{}\t{}'.format(file, prediction))
+
+    return (files, predicted)
 
 
 if __name__ == '__main__':
