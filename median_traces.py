@@ -14,7 +14,7 @@ Options:
   -h --help           Show this screen.
   -v --version        Print version number.
   -p, --path=DIR      Specifies dataset path [default: dataset/].
-  -r, --regex=REGEX   Specifies regex for locating images [default: *.jpeg].
+  -r, --regex=REGEX   Specifies regex for locating images [default: *.jpg].
   --samples=INT       Specifies the number of samples when plotting [default: 30].
 
 """
@@ -56,7 +56,7 @@ DIRECTIONS = ('h', 'dr', 'v', 'dl')
 CLF_FILE_TEMPLATE ='{}_vs_{}.clf'.format
 
 dataset_path = 'dataset'
-images_regex = '*.jpeg'
+images_regex = '*.jpg'
 make_histogram = lambda: np.zeros(256, dtype='int')
 
 
