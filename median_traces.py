@@ -7,7 +7,7 @@ Usage:
   median_traces.py extract [options] <dataset>
   median_traces.py learn   [options] <dataset> <dataset>
   median_traces.py plot    [options] <dataset> <dataset> [--samples INT]
-  median_traces.py test    [options] <dataset> <dataset> <targets>...
+  median_traces.py test    [options] <dataset> <dataset> [--cls CLASS] <targets>...
   median_traces.py -h | --help
 
 Options:
@@ -16,7 +16,7 @@ Options:
   -p, --path=DIR      Specifies dataset path [default: dataset/].
   -r, --regex=REGEX   Specifies regex for locating images [default: *.jpg].
   --samples=INT       Specifies the number of samples when plotting [default: 30].
-
+  --cls CLASS         Specifies that all test inputs belong to the same class, and output accuracy.
 """
 from __future__ import division, print_function
 
@@ -204,7 +204,7 @@ def learn(a, b):
 
     return pipeline
 
-def test(a, b, targets):
+def test(a, b, targets, targets_class=None):
     """
     Specifically test a number of images after having classified the two
     datasets `a` and `b`.
@@ -231,14 +231,16 @@ def test(a, b, targets):
     files = reduce(add, map(glob, targets))
     # features = [extract_feature(file) for file in files]
     tests = Pool().map(extract_feature_from_file, files)
-    tests = np.array(tests, dtype='float64')
+    tests = normalize(np.array(tests, dtype='float64'))
 
-    predicted = clf.predict(tests)
+    if targets_class is None:
+        predicted = clf.predict(tests)
+        for file, prediction in izip(files, predicted):
+            print('{}\t{}'.format(file, prediction))
 
-    for file, prediction in izip(files, predicted):
-        print('{}\t{}'.format(file, prediction))
-
-    return (files, predicted)
+    else:
+        score = clf.score(tests, np.repeat(targets_class, len(tests)))
+        print('{}/{} had accuracy {:3.3f}'.format(a, b, score))
 
 
 if __name__ == '__main__':
@@ -264,4 +266,5 @@ if __name__ == '__main__':
     elif args['test']:
         a, b = datasets
         targets = args['<targets>']
-        test(a, b, targets)
+        targets_class = args['--cls']
+        test(a, b, targets, targets_class)
