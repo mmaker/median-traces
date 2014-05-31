@@ -200,7 +200,7 @@ def learn(a, b):
     pipeline = Pipeline([('pca', pca), ('clf', clf)])
 
     # caching
-    _dump(pipeline, CLF_FILE_TEMPLATE(a, b))
+    _dump(pipeline, os.path.join(dataset_path, CLF_FILE_TEMPLATE(a, b)))
 
     return pipeline
 
@@ -217,7 +217,7 @@ def test(a, b, targets):
     """
     # load classificator. If not found, create it.
     try:
-        clf = _load(CLF_FILE_TEMPLATE(a, b))
+        clf = _load(os.path.join(dataset_path, CLF_FILE_TEMPLATE(a, b)))
     except IOError, ValueError:
         clf = learn(a, b)
 
