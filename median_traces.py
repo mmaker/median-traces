@@ -36,7 +36,6 @@ from PIL import Image
 from sklearn import svm, cross_validation, decomposition
 #from sklearn.externals import joblib
 from sklearn.grid_search import GridSearchCV
-from sklearn.metrics import accuracy_score as accuracy
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import normalize
 
@@ -212,8 +211,6 @@ def test(a, b, targets, targets_class=None):
     :param str a: dataset
     :param str b:
     :param list targets: list of glob patterns, directories, single files.
-
-    :return: The list of predicted values.
     """
     # load classificator. If not found, create it.
     try:
