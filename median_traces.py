@@ -105,8 +105,8 @@ def extract_feature_from_file(image_file):
 
     :rtype: np.array
     """
-    print('processing {}'.format(image_file))
-    img = np.asarray(Image.open(image_file).convert('L'), dtype='int')
+    # print('processing {}'.format(image_file))
+    img = np.asarray(Image.open(image_file), dtype='int')
     return extract_feature(img)
 
 def extract_feature(img):
