@@ -6,7 +6,8 @@ DATASET="$1"
 COMPRESSION_LEVEL="$2"
 
 PARALLEL="parallel"
-ANTI="/home/maker/mt/countermed/run_fuck_median.sh /usr/local/MATLAB/R2014a/"
+ANTI="./contrib/run_fuck_median.sh /usr/local/MATLAB/R2014a/"
+ANTI_THR=5
 
 DOMAIN="-colorspace gray"
 LUMINANCE_DOMAIN=""
@@ -46,7 +47,7 @@ make_antidataset()
     src_dir="../$1"
     dst_dir="../$1-anti"
     mkdir "$dst_dir"
-    $ANTI $PATTERN $src_dir $dst_dir
+    $ANTI $PATTERN $src_dir $dst_dir $ANTI_THR
 }
 
 # 128x128 images, with jpeg compression.
