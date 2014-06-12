@@ -8,6 +8,7 @@ Usage:
   median_traces.py learn   [options] <dataset> <dataset>
   median_traces.py plot    [options] <dataset> <dataset> [--samples INT]
   median_traces.py test    [options] <dataset> <dataset> [--cls CLASS] <targets>...
+  median_traces.py ssim    [-r REGEX] <dir> <dir>
   median_traces.py -h | --help
 
 Options:
@@ -38,6 +39,10 @@ from sklearn import svm, cross_validation, decomposition
 from sklearn.grid_search import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import normalize
+
+from skimage import img_as_float
+from skimage.measure import structural_similarity as ssim
+
 
 __version__ = float('nan')
 __author__ = "Michele Orru`"
@@ -239,6 +244,20 @@ def test(a, b, targets, targets_class=None):
         score = clf.score(tests, np.repeat(targets_class, len(tests)))
         print('{}/{} had accuracy {:3.3f}'.format(a, b, score))
 
+def measure_ssim(a, b):
+    """
+    Output the structural similarity in terms of (mean, var) for all images
+    present in directories a, b.
+    """
+    a_files = glob(os.path.join(a, images_regex))
+    b_files = glob(os.path.join(b, images_regex))
+
+    open_image = lambda f: img_as_float(Image.open(f))
+    simil = [ssim(open_image(file_a), open_image(file_b))
+             for file_a, file_b in zip(a_files, b_files)]
+    print('mean {mean:3.3f} variance {var:3.3f}'.format(
+        mean=np.mean(simil), var=np.var(simil)))
+
 
 if __name__ == '__main__':
     args = docopt(__doc__, version=__version__)
@@ -265,3 +284,7 @@ if __name__ == '__main__':
         targets = args['<targets>']
         targets_class = args['--cls']
         test(a, b, targets, targets_class)
+
+    elif args['ssim']:
+        a, b = args['<dir>']
+        measure_ssim(a, b)
