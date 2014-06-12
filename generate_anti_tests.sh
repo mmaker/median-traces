@@ -13,7 +13,7 @@ make_antidataset()
     echo "$1-anti / threshold: $2"
 
     src_dir="$1"
-    dst_dir="$1-$2"
+    dst_dir="anti-testcases/$1-$2"
     mkdir -p "$dst_dir"
     $ANTI $PATTERN $src_dir $dst_dir $2
 }
