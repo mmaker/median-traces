@@ -1,7 +1,6 @@
 function fuck_median(pattern, source, dest, t)
-files = dir(sprintf('%s/%s', source, pattern))
-   for file = files'
-      file.name
+    files = dir(sprintf('%s/%s', source, pattern))
+    for file = files'
       I = single(imread(sprintf('%s/%s', source, file.name)));
       W = impulsenoiseBlock2(I, str2num(t));
       imwrite(W, sprintf('%s/%s', dest, file.name));
