@@ -255,8 +255,11 @@ def measure_ssim(a, b):
     open_image = lambda f: img_as_float(Image.open(f))
     simil = [ssim(open_image(file_a), open_image(file_b))
              for file_a, file_b in zip(a_files, b_files)]
-    print('mean {mean:3.3f} variance {var:3.3f}'.format(
-        mean=np.mean(simil), var=np.var(simil)))
+
+    mean, var = np.mean(simil), np.var(simil)
+    print('mean {mean:4.3f} variance {var:5.4f}'.format(mean, var))
+
+    return mean, var
 
 
 if __name__ == '__main__':
