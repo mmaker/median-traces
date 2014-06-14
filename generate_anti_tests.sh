@@ -2,7 +2,7 @@
 # expecting a directory structure previously generated via generate_dataset.bash.
 
 ROOT="$1"
-ANTI="/home/maker/dev/uni/data-hiding/project/contrib/run_fuck_median.sh /usr/local/MATLAB/R2014a/"
+ANTI="/home/maker/mt/contrib/run_fuck_median.sh /usr/local/MATLAB/R2014a/"
 PATTERN='*.jpg'
 
 cd $ROOT
@@ -19,7 +19,7 @@ make_antidataset()
 }
 
 
-for thr in {5..10}
+for thr in $(seq 1 0.5 5)
 do
     make_antidataset mf5      $thr
     make_antidataset mf3      $thr

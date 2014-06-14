@@ -8,7 +8,7 @@ Usage:
   median_traces.py learn   [options] <dataset> <dataset>
   median_traces.py plot    [options] <dataset> <dataset> [--samples INT]
   median_traces.py test    [options] <dataset> <dataset> [--cls CLASS] <targets>...
-  median_traces.py ssim    [-r REGEX] <dir> <dir>
+  median_traces.py measure [-r REGEX] <dir> <dir>
   median_traces.py -h | --help
 
 Options:
@@ -249,17 +249,32 @@ def measure_ssim(a, b):
     Output the structural similarity in terms of (mean, var) for all images
     present in directories a, b.
     """
-    a_files = glob(os.path.join(a, images_regex))
-    b_files = glob(os.path.join(b, images_regex))
+    measuref = psnr
+    a_files = glob(os.path.join(a, images_regex)) if os.path.isdir(a) else [a]
+    b_files = glob(os.path.join(b, images_regex)) if os.path.isdir(b) else [b]
 
     open_image = lambda f: img_as_float(Image.open(f))
-    simil = [ssim(open_image(file_a), open_image(file_b))
+    simil = [measuref(open_image(file_a), open_image(file_b))
              for file_a, file_b in zip(a_files, b_files)]
 
     mean, var = np.mean(simil), np.var(simil)
-    print('mean {mean:4.3f} variance {var:5.4f}'.format(mean, var))
+    print('{} {} {:4.3f} {:5.4f}'.format(a, b, mean, var))
 
     return mean, var
+
+def mse(img, nimg):
+    if not img.shape == nimg.shape:
+        raise ValueError("Image shapes differ")
+
+    return np.sum((img - nimg)**2) / np.prod(img.shape)
+
+def psnr(img, nimg, bits=8):
+    max_value =  1 << bits - 1
+
+    if (img == nimg).all():
+        return float('inf')
+    else:
+        return 20 * np.log10(max_value) - 10 * np.log10(mse(img, nimg))
 
 
 if __name__ == '__main__':
@@ -288,6 +303,6 @@ if __name__ == '__main__':
         targets_class = args['--cls']
         test(a, b, targets, targets_class)
 
-    elif args['ssim']:
+    elif args['measure']:
         a, b = args['<dir>']
         measure_ssim(a, b)
