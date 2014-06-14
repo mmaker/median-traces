@@ -53,8 +53,9 @@ __license__ = """"THE BEER-WARE LICENSE" (Revision 42):
  this stuff is worth it, you can buy me a beer in return.
 """
 
-__all__ = ['g', 'neighbours', 'extract_dataset', 'extract_feature',
-           'extract_feature_from_file', 'learn', 'test']
+__all__ = ['g', 'neighbours', 'psnr',
+           'extract_dataset', 'extract_feature', 'extract_feature_from_file',
+           'learn', 'test', 'measure']
 
 DIRECTIONS = ('h', 'dr', 'v', 'dl')
 CLF_FILE_TEMPLATE ='{}_vs_{}.clf'.format
@@ -71,6 +72,21 @@ def _load(file):
 def _dump(obj, file):
     with open(file, 'wb') as f:
         return pickle.dump(obj, f)
+
+def psnr(img, nimg, bits=8):
+    """
+    Calculate the Peak Signal Noise Ratio on the given image channel,
+    interpreted as `bits`-bit image.
+    """
+    max_value =  1 << bits - 1
+
+    if not img.shape == nimg.shape:
+        raise ValueError("Image shapes differ")
+    if (img == nimg).all():
+        return float('inf')
+
+    mse = np.sum((img - nimg)**2) / np.prod(img.shape)
+    return 20 * np.log10(max_value) - 10 * np.log10(mse)
 
 def g(a, b):
     # hey, this shit makes g() 10s/50imgs faster
@@ -244,12 +260,11 @@ def test(a, b, targets, targets_class=None):
         score = clf.score(tests, np.repeat(targets_class, len(tests)))
         print('{}/{} had accuracy {:3.3f}'.format(a, b, score))
 
-def measure_ssim(a, b):
+def measure(a, b, measuref=psnr):
     """
     Output the structural similarity in terms of (mean, var) for all images
     present in directories a, b.
     """
-    measuref = psnr
     a_files = glob(os.path.join(a, images_regex)) if os.path.isdir(a) else [a]
     b_files = glob(os.path.join(b, images_regex)) if os.path.isdir(b) else [b]
 
@@ -261,20 +276,6 @@ def measure_ssim(a, b):
     print('{} {} {:4.3f} {:5.4f}'.format(a, b, mean, var))
 
     return mean, var
-
-def mse(img, nimg):
-    if not img.shape == nimg.shape:
-        raise ValueError("Image shapes differ")
-
-    return np.sum((img - nimg)**2) / np.prod(img.shape)
-
-def psnr(img, nimg, bits=8):
-    max_value =  1 << bits - 1
-
-    if (img == nimg).all():
-        return float('inf')
-    else:
-        return 20 * np.log10(max_value) - 10 * np.log10(mse(img, nimg))
 
 
 if __name__ == '__main__':
@@ -305,4 +306,4 @@ if __name__ == '__main__':
 
     elif args['measure']:
         a, b = args['<dir>']
-        measure_ssim(a, b)
+        measure(a, b)
