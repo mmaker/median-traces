@@ -12,6 +12,7 @@ do
     do
 	antidir="$DPATH/anti-testcases/$s-$t/"
 	mfdir="$DPATH/$s"
-	$MEASURE $mfdir $antidir
+	printf "ssim $s $t " && $MEASURE ssim $mfdir $antidir
+    printf "psnr $s $t " && $MEASURE psnr $mfdir $antidir
     done
 done

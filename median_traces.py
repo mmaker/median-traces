@@ -265,15 +265,17 @@ def measure(a, b, measuref=psnr):
     Output the structural similarity in terms of (mean, var) for all images
     present in directories a, b.
     """
-    a_files = glob(os.path.join(a, images_regex) if os.path.isdir(a) else a)
-    b_files = glob(os.path.join(b, images_regex) if os.path.isdir(b) else b)
+    a_files = sorted(glob(os.path.join(a, images_regex)
+                          if os.path.isdir(a) else a))
+    b_files = sorted(glob(os.path.join(b, images_regex)
+                          if os.path.isdir(b) else b))
 
     open_image = lambda f: np.asarray(Image.open(f).convert('L'), dtype='float')
     simil = [measuref(open_image(file_a), open_image(file_b))
              for file_a, file_b in zip(a_files, b_files)]
 
     mean, var = np.mean(simil), np.var(simil)
-    print('{} {} {:4.3f} {:5.4f}'.format(a, b, mean, var))
+    print('{:4.3f} {:5.4f}'.format(mean, var))
 
     return mean, var
 
