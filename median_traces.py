@@ -8,7 +8,7 @@ Usage:
   median_traces.py learn   [options] <dataset> <dataset>
   median_traces.py plot    [options] <dataset> <dataset> [--samples INT]
   median_traces.py test    [options] <dataset> <dataset> [--cls CLASS] <targets>...
-  median_traces.py measure [-r REGEX] <dir> <dir>
+  median_traces.py measure [-r REGEX] <unit> <targets> <targets>
   median_traces.py -h | --help
 
 Options:
@@ -40,7 +40,6 @@ from sklearn.grid_search import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import normalize
 
-from skimage import img_as_float
 from skimage.measure import structural_similarity as ssim
 
 
@@ -265,10 +264,10 @@ def measure(a, b, measuref=psnr):
     Output the structural similarity in terms of (mean, var) for all images
     present in directories a, b.
     """
-    a_files = glob(os.path.join(a, images_regex)) if os.path.isdir(a) else [a]
-    b_files = glob(os.path.join(b, images_regex)) if os.path.isdir(b) else [b]
+    a_files = glob(os.path.join(a, images_regex) if os.path.isdir(a) else a)
+    b_files = glob(os.path.join(b, images_regex) if os.path.isdir(b) else b)
 
-    open_image = lambda f: img_as_float(Image.open(f))
+    open_image = lambda f: np.asarray(Image.open(f).convert('L'), dtype='float')
     simil = [measuref(open_image(file_a), open_image(file_b))
              for file_a, file_b in zip(a_files, b_files)]
 
@@ -305,5 +304,6 @@ if __name__ == '__main__':
         test(a, b, targets, targets_class)
 
     elif args['measure']:
-        a, b = args['<dir>']
-        measure(a, b)
+        a, b = args['<targets>']
+        measuref = dict(psnr=psnr, ssim=ssim)[args['<unit>']]
+        measure(a, b, measuref=measuref)
