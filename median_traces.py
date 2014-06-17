@@ -25,6 +25,7 @@ import os.path
 from functools import reduce
 from glob import glob
 from itertools import izip
+from math import log10
 from multiprocessing import Pool
 from operator import add
 import cPickle as pickle
@@ -85,7 +86,7 @@ def psnr(img, nimg, bits=8):
         return float('inf')
 
     mse = np.sum((img - nimg)**2) / np.prod(img.shape)
-    return 20 * np.log10(max_value) - 10 * np.log10(mse)
+    return 10 * (2*log10(max_value) - log10(mse))
 
 def g(a, b):
     # hey, this shit makes g() 10s/50imgs faster
