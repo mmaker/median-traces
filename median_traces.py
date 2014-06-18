@@ -258,7 +258,7 @@ def test(a, b, targets, targets_class=None):
 
     else:
         score = clf.score(tests, np.repeat(targets_class, len(tests)))
-        print('{}/{} had accuracy {:3.3f}'.format(a, b, score))
+        print('{:3.3f}'.format(score))
 
 def measure(a, b, measuref=psnr):
     """
