@@ -1,13 +1,19 @@
 #!/bin/bash
 
+if [ ! \( -r "$1" \) -o \( -z "$2" \) ]
+    then
+    echo "usage: generate_dataset <ucid.v2.tar.gz> <COMPRESSION_LEVEL>"
+    exit 1
+fi
+
 # expecting UCIDv2 dataset.download from
 # <http://homepages.lboro.ac.uk/~cogs/datasets/ucid/data/ucid.v2.tar.gz>
 DATASET="$1"
 COMPRESSION_LEVEL="$2"
 
 PARALLEL="parallel"
-ANTI="./contrib/run_fuck_median.sh /usr/local/MATLAB/R2014a/"
-ANTI_THR=5
+ANTI="/home/maker/mt/contrib/run_fuck_median.sh /usr/local/MATLAB/R2014a/"
+THRESHOLDS=$(seq 1 0.5 10)
 
 DOMAIN="-colorspace gray"
 LUMINANCE_DOMAIN=""
@@ -38,16 +44,6 @@ make_dataset()
     args="${@:2:$#}"
     [ -d "$dataset_dir" ] || mkdir "$dataset_dir"
     find . -name "$PATTERN" | $PARALLEL convert {} $args "$dataset_dir/{.}.jpg"
-}
-
-make_antidataset()
-{
-    echo "$1-anti"
-
-    src_dir="../$1"
-    dst_dir="../$1-anti"
-    mkdir "$dst_dir"
-    $ANTI $PATTERN $src_dir $dst_dir $ANTI_THR
 }
 
 # 128x128 images, with jpeg compression.
@@ -113,9 +109,20 @@ make_dataset all-256 $CROP_256 $DOMAIN $RESIZE_256 $COMPRESS
 
 
 # anti dataset
+sets=(mf3 mf5 mf35 mf35-64 mf35-256)
 PATTERN='*.jpg'
-make_antidataset mf3
-make_antidataset mf5
-make_antidataset mf35
-make_antidataset mf35-64
-make_antidataset mf35-256
+
+cd ..
+mkdir -p anti-testcases
+
+for s in "${sets[@]}"
+do
+    for t in $THRESHOLDS
+    do
+        src_dir="$s"
+        dst_dir="anti-testcases/$s-$t"
+        mkdir -p "$dst_dir"
+        echo "$s-anti $t"
+        $ANTI $PATTERN $src_dir $dst_dir $t
+    done
+done

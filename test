@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [ ! -d "$1" ]
+    then
+    echo "usage: $0 <dataset-path>"
+    exit 1
+fi
+
 DPATH="$1"
 sets=(mf3 mf5 mf35 mf35-64 mf35-256)
 thresholds=$(seq 1 0.5 10)
