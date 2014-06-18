@@ -12,6 +12,7 @@ DATASET="$1"
 COMPRESSION_LEVEL="$2"
 
 PARALLEL="parallel"
+# don't forget to >> mcc -m fuck_median.m before running this script!
 ANTI="/home/maker/mt/contrib/run_fuck_median.sh /usr/local/MATLAB/R2014a/"
 THRESHOLDS=$(seq 1 0.5 10)
 
