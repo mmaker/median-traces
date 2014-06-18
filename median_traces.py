@@ -78,7 +78,7 @@ def psnr(img, nimg, bits=8):
     Calculate the Peak Signal Noise Ratio on the given image channel,
     interpreted as `bits`-bit image.
     """
-    max_value =  1 << bits - 1
+    max_value =  (1 << bits) - 1
 
     if not img.shape == nimg.shape:
         raise ValueError("Image shapes differ")
