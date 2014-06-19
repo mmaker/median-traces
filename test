@@ -6,21 +6,25 @@ if [ ! -d "$1" ]
     exit 1
 fi
 
+setmf=(mf3 mf5 mf35 mf35-64 mf35-256)
+setb=(ori  ori all  all     all)
+
 DPATH="$1"
-sets=(mf3 mf5 mf35 mf35-64 mf35-256)
 thresholds=$(seq 1 0.5 10)
 LEARN="python median_traces.py learn --path=$DPATH"
 TEST="python median_traces.py test --path=$DPATH"
 MEASURE="python median_traces.py measure"
 
-for s in "${sets[@]}"
+for i in $(seq 1 "${#setmf[@]}")
 do
     for t in $thresholds
     do
+	s="${setmf[$i-1]}"
+	b="${setb[$i-1]}"
 	antidir="$DPATH/anti-testcases/$s-$t/"
 	mfdir="$DPATH/$s"
 
-	accuracy=$($TEST $s ori --cls $s $antidir)
+	accuracy=$($TEST $s $b --cls $s $antidir)
 	psnr=$($MEASURE psnr $mfdir $antidir | cut -d ' ' -f 1)
 	ssim=$($MEASURE ssim $mfdir $antidir | cut -d ' ' -f 1)
 	echo $s $t $accuracy $psnr $ssim
