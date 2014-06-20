@@ -7,7 +7,7 @@ if [ ! -d "$1" ]
 fi
 
 setmf=(mf3 mf5 mf35 mf35-64 mf35-256)
-setb=(ori  ori all  all     all)
+setb=(ori  ori all  all-64  all-256)
 
 DPATH="$1"
 thresholds=$(seq 1 0.5 10)
@@ -27,7 +27,7 @@ do
 	accuracy=$($TEST $s $b --cls $s $antidir)
 	psnr=$($MEASURE psnr $mfdir $antidir | cut -d ' ' -f 1)
 	ssim=$($MEASURE ssim $mfdir $antidir | cut -d ' ' -f 1)
-	echo $s $t $accuracy $psnr $ssim
+	echo $s $b $t $accuracy $psnr $ssim
 
     done
 done
