@@ -6,28 +6,30 @@ if [ ! -d "$1" ]
     exit 1
 fi
 
-setmf=(mf3 mf5 mf35 mf35-64 mf35-256)
-setb=(ori  ori ori  ori-64  ori-256)
-
 DPATH="$1"
-thresholds=$(seq 1 0.5 10)
-LEARN="python median_traces.py learn --path=$DPATH"
-TEST="python median_traces.py test --path=$DPATH"
-MEASURE="python median_traces.py measure"
+source config
 
-for i in $(seq 1 "${#setmf[@]}")
-do
-    for t in $thresholds
-    do
-	s="${setmf[$i-1]}"
-	b="${setb[$i-1]}"
-	antidir="$DPATH/anti-testcases/$s-$t/"
-	mfdir="$DPATH/$s"
+do_test()
+{
+    a="$1"
+    b="$2"
 
-	accuracy=$($TEST $s $b --cls $s $antidir)
+    antidir="$DPATH/anti-testcases/$a-$t-[$3-$4]/"
+	mfdir="$DPATH/$a"
+
+    accuracy=$($TEST $a $b --cls $a $antidir)
 	psnr=$($MEASURE psnr $mfdir $antidir | cut -d ' ' -f 1)
-	ssim=$($MEASURE ssim $mfdir $antidir | cut -d ' ' -f 1)
-	echo $s $t $accuracy $psnr $ssim
+	#ssim=$($MEASURE ssim $mfdir $antidir | cut -d ' ' -f 1)
+	printf "$a\t$t\t\[$range\]\t$accuracy\t$psnr\t$ssim\n"
+}
 
+
+for t in $THRESHOLDS; do
+    for range in "${NOISE_RANGES[@]}"; do
+        do_test mf3      ori     $t $range
+        do_test mf5      ori     $t $range
+        do_test mf35     ori     $t $range
+        do_test mf35-64  ori-64  $t $range
+        do_test mf35-256 ori-256 $t $range
     done
 done

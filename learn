@@ -7,7 +7,7 @@ if [ ! -d "$1" ]
 fi
 
 DPATH="$1"
-LEARN="python median_traces.py learn --path=$DPATH --regex 'ucid00*.jpg' "
+source config
 
 $LEARN mf5 ori
 # $LEARN mf5 gau

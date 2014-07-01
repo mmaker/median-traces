@@ -10,10 +10,7 @@ fi
 # <http://homepages.lboro.ac.uk/~cogs/datasets/ucid/data/ucid.v2.tar.gz>
 DATASET="$1"
 COMPRESSION_LEVEL="$2"
-
-PARALLEL="parallel"
-ANTI="`pwd`/contrib/run_anti_median.sh $HOME/.bin/MATLAB/R2014a/"
-THRESHOLDS=$(seq 1 0.5 5)
+source config
 
 DOMAIN="-colorspace gray"
 LUMINANCE_DOMAIN=""
@@ -31,22 +28,34 @@ RESIZE_256="-resize 110% -resize 256x256"
 
 UCID_DIR="dataset-j$COMPRESSION_LEVEL/ucid"
 mkdir -p $UCID_DIR
-tar xvf $DATASET -C $UCID_DIR
+# tar xvf $DATASET -C $UCID_DIR
 cd $UCID_DIR
 
 make_dataset()
 {
     echo "$1"
-
     dataset_dir="../$1"
     pattern="$2"
     args="${@:2:$#}"
-    [ -d "$dataset_dir" ] || mkdir "$dataset_dir"
+    [ -d "$dataset_dir" ] && return || mkdir "$dataset_dir"
     find . -name "$PATTERN" | $PARALLEL convert {} $args "$dataset_dir/{.}.jpg"
 }
 
-# 128x128 images, with jpeg compression.
+make_antidataset()
+{
+    s="$1"
+    threshold="$2"
+    bsize="$3"
+    a="$4"
+    b="$5"
+    dst_dir="anti-testcases/$s-$threshold-[$a-$b]"
 
+    echo "$s-anti $threshold [$a-$b]"
+    [ -d $dst_dir ] && return || mkdir -p "$dst_dir"
+    $ANTI $PATTERN $s $dst_dir $bsize $threshold $range
+}
+
+# 128x128 images, with jpeg compression.
 PATTERN='*.tif'
 make_dataset ori $CROP $DOMAIN           $COMPRESS
 make_dataset mf3 $CROP $DOMAIN $MEDIAN3  $COMPRESS
@@ -70,7 +79,6 @@ make_dataset mf35 $CROP $DOMAIN $MEDIAN5 $COMPRESS
 # make_dataset all $CROP $DOMAIN $RESIZE   $COMPRESS
 
 # 64x64 images, with jpeg compression
-
 make_dataset ori-64 $CROP_64 $DOMAIN $COMPRESS
 
 PATTERN='*[0-7][0-9][02468].tif'
@@ -107,25 +115,16 @@ make_dataset mf35-256 $CROP_256 $DOMAIN $MEDIAN5 $COMPRESS
 
 
 # anti dataset
-sets=(mf3 mf5 mf35 mf35-64 mf35-256)
 PATTERN='ucid01*.jpg'
-ranges=("3 7" "8 12")
 cd ..
 mkdir -p anti-testcases
 
-for s in "${sets[@]}"
-do
-    for range in "${ranges[@]}"
-    do
-        for t in $THRESHOLDS
-        do
-            strrange=$(echo $range | sed -e 's/ /-/')
-            block_size="${s: -1}"
-            src_dir="$s"
-            dst_dir="anti-testcases/$s-$t-[$strrange]"
-            mkdir -p "$dst_dir"
-            echo "$s-anti $t"
-            $ANTI $PATTERN $src_dir $dst_dir $block_size $t $range
-        done
+for t in $THRESHOLDS; do
+    for range in "${NOISE_RANGES[@]}"; do
+        make_antidataset mf3      $t 3 $range
+        make_antidataset mf5      $t 5 $range
+        make_antidataset mf35     $t 5 $range
+        make_antidataset mf35-64  $t 5 $range
+        make_antidataset mf35-256 $t 5 $range
     done
 done
