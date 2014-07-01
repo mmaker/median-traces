@@ -12,9 +12,8 @@ DATASET="$1"
 COMPRESSION_LEVEL="$2"
 
 PARALLEL="parallel"
-# don't forget to >> mcc -m fuck_median.m before running this script!
-ANTI="/home/maker/mt/contrib/run_fuck_median.sh /usr/local/MATLAB/R2014a/"
-THRESHOLDS=$(seq 1 0.5 10)
+ANTI="`pwd`/contrib/run_anti_median.sh $HOME/.bin/MATLAB/R2014a/"
+THRESHOLDS=$(seq 1 0.5 5)
 
 DOMAIN="-colorspace gray"
 LUMINANCE_DOMAIN=""
@@ -52,23 +51,23 @@ PATTERN='*.tif'
 make_dataset ori $CROP $DOMAIN           $COMPRESS
 make_dataset mf3 $CROP $DOMAIN $MEDIAN3  $COMPRESS
 make_dataset mf5 $CROP $DOMAIN $MEDIAN5  $COMPRESS
-make_dataset gau $CROP $DOMAIN $GAUSSIAN $COMPRESS
-make_dataset res $CROP $DOMAIN $RESIZE   $COMPRESS
-make_dataset ave $CROP $DOMAIN $AVERAGE  $COMPRESS
+# make_dataset gau $CROP $DOMAIN $GAUSSIAN $COMPRESS
+# make_dataset res $CROP $DOMAIN $RESIZE   $COMPRESS
+# make_dataset ave $CROP $DOMAIN $AVERAGE  $COMPRESS
 
 PATTERN='*[0-7][0-9][02468].tif'
 make_dataset mf35 $CROP $DOMAIN $MEDIAN3 $COMPRESS
 PATTERN='*[0-7][0-9][13579].tif'
 make_dataset mf35 $CROP $DOMAIN $MEDIAN5 $COMPRESS
 
-PATTERN='ucid00[0-1]*.tif'
-make_dataset all $CROP $DOMAIN           $COMPRESS
-PATTERN='ucid00[2-3]*.tif'
-make_dataset all $CROP $DOMAIN $AVERAGE  $COMPRESS
-PATTERN='ucid00[4-5]*.tif'
-make_dataset all $CROP $DOMAIN $GAUSSIAN $COMPRESS
-PATTERN='ucid00[6-7].tif'
-make_dataset all $CROP $DOMAIN $RESIZE   $COMPRESS
+# PATTERN='ucid00[0-1]*.tif'
+# make_dataset all $CROP $DOMAIN           $COMPRESS
+# PATTERN='ucid00[2-3]*.tif'
+# make_dataset all $CROP $DOMAIN $AVERAGE  $COMPRESS
+# PATTERN='ucid00[4-5]*.tif'
+# make_dataset all $CROP $DOMAIN $GAUSSIAN $COMPRESS
+# PATTERN='ucid00[6-7].tif'
+# make_dataset all $CROP $DOMAIN $RESIZE   $COMPRESS
 
 # 64x64 images, with jpeg compression
 
@@ -79,18 +78,17 @@ make_dataset mf35-64 $CROP_64 $DOMAIN $MEDIAN3 $COMPRESS
 PATTERN='*[0-7][0-9][13579].tif'
 make_dataset mf35-64 $CROP_64 $DOMAIN $MEDIAN5 $COMPRESS
 
-PATTERN='ucid00[0-1]*.tif'
-make_dataset all-64 $CROP_64 $DOMAIN            $COMPRESS
-PATTERN='ucid00[2-3]*.tif'
-make_dataset all-64 $CROP_64 $DOMAIN $AVERAGE   $COMPRESS
-PATTERN='ucid00[4-5]*.tif'
-make_dataset all-64 $CROP_64 $DOMAIN $GAUSSIAN  $COMPRESS
-PATTERN='ucid00[6-7].tif'
-make_dataset all-64 $CROP_64 $DOMAIN $RESIZE_64 $COMPRESS
-PATTERN='*.tif'
+# PATTERN='ucid00[0-1]*.tif'
+# make_dataset all-64 $CROP_64 $DOMAIN            $COMPRESS
+# PATTERN='ucid00[2-3]*.tif'
+# make_dataset all-64 $CROP_64 $DOMAIN $AVERAGE   $COMPRESS
+# PATTERN='ucid00[4-5]*.tif'
+# make_dataset all-64 $CROP_64 $DOMAIN $GAUSSIAN  $COMPRESS
+# PATTERN='ucid00[6-7].tif'
+# make_dataset all-64 $CROP_64 $DOMAIN $RESIZE_64 $COMPRESS
 
 # 256x256 images, with jpeg compression
-
+PATTERN='*.tif'
 make_dataset ori-256  $CROP_256 $DOMAIN $COMPRESS
 
 PATTERN='*[0-7][0-9][02468].tif'
@@ -98,31 +96,36 @@ make_dataset mf35-256 $CROP_256 $DOMAIN $MEDIAN3 $COMPRESS
 PATTERN='*[0-7][0-9][13579].tif'
 make_dataset mf35-256 $CROP_256 $DOMAIN $MEDIAN5 $COMPRESS
 
-PATTERN='ucid00[0-1]*.tif'
-make_dataset all-256 $CROP_256 $DOMAIN             $COMPRESS
-PATTERN='ucid00[2-3]*.tif'
-make_dataset all-256 $CROP_256 $DOMAIN $AVERAGE    $COMPRESS
-PATTERN='ucid00[4-5]*.tif'
-make_dataset all-256 $CROP_256 $DOMAIN $GAUSSIAN   $COMPRESS
-PATTERN='ucid00[6-7]*.tif'
-make_dataset all-256 $CROP_256 $DOMAIN $RESIZE_256 $COMPRESS
+# PATTERN='ucid00[0-1]*.tif'
+# make_dataset all-256 $CROP_256 $DOMAIN             $COMPRESS
+# PATTERN='ucid00[2-3]*.tif'
+# make_dataset all-256 $CROP_256 $DOMAIN $AVERAGE    $COMPRESS
+# PATTERN='ucid00[4-5]*.tif'
+# make_dataset all-256 $CROP_256 $DOMAIN $GAUSSIAN   $COMPRESS
+# PATTERN='ucid00[6-7]*.tif'
+# make_dataset all-256 $CROP_256 $DOMAIN $RESIZE_256 $COMPRESS
 
 
 # anti dataset
 sets=(mf3 mf5 mf35 mf35-64 mf35-256)
-PATTERN='*.jpg'
-
+PATTERN='ucid01*.jpg'
+ranges=("3 7" "8 12")
 cd ..
 mkdir -p anti-testcases
 
 for s in "${sets[@]}"
 do
-    for t in $THRESHOLDS
+    for range in "${ranges[@]}"
     do
-        src_dir="$s"
-        dst_dir="anti-testcases/$s-$t"
-        mkdir -p "$dst_dir"
-        echo "$s-anti $t"
-        $ANTI $PATTERN $src_dir $dst_dir $t
+        for t in $THRESHOLDS
+        do
+            strrange=$(echo $range | sed -e 's/ /-/')
+            block_size="${s: -1}"
+            src_dir="$s"
+            dst_dir="anti-testcases/$s-$t-[$strrange]"
+            mkdir -p "$dst_dir"
+            echo "$s-anti $t"
+            $ANTI $PATTERN $src_dir $dst_dir $block_size $t $range
+        done
     done
 done

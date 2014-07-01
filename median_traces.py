@@ -6,7 +6,6 @@
 Usage:
   median_traces.py extract [options] <dataset>
   median_traces.py learn   [options] <dataset> <dataset>
-  median_traces.py plot    [options] <dataset> <dataset> [--samples INT]
   median_traces.py test    [options] <dataset> <dataset> [--cls CLASS] <targets>...
   median_traces.py measure [-r REGEX] <unit> <targets> <targets>
   median_traces.py -h | --help
@@ -184,20 +183,6 @@ def extract_feature(img):
                            for sign in ('ltpp', 'ltpn')])
 
 
-def plot(a, b, samples=30):
-    """
-    Merge with different colors, the resulting histograms of two datasets.
-    """
-    features_a = extract_dataset(a)[:samples]
-    features_b = extract_dataset(b)[:samples]
-
-    xs = np.arange(0, features_a.shape[1])
-    for fa, fb in izip(features_a, features_b):
-        plt.scatter(xs, fa, c='red', alpha=.5)
-        plt.scatter(xs, fb, c='blue', alpha=.5)
-    plt.show()
-
-
 def learn(a, b):
     features_a = np.array(extract_dataset(a), dtype='float64')
     features_b = np.array(extract_dataset(b), dtype='float64')
@@ -294,11 +279,6 @@ if __name__ == '__main__':
     elif args['learn']:
         a, b = datasets
         learn(a, b)
-
-    elif args['plot']:
-        a, b = datasets
-        samples = int(args['--samples'])
-        plot(a, b, samples=samples)
 
     elif args['test']:
         a, b = datasets

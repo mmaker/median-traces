@@ -7,18 +7,22 @@ if [ ! -d "$1" ]
 fi
 
 DPATH="$1"
-LEARN="python median_traces.py learn --path=$DPATH"
+LEARN="python median_traces.py learn --path=$DPATH --regex 'ucid00*.jpg' "
 
 $LEARN mf5 ori
-$LEARN mf5 gau
-$LEARN mf5 res
-$LEARN mf5 ave
+# $LEARN mf5 gau
+# $LEARN mf5 res
+# $LEARN mf5 ave
 
 $LEARN mf3 ori
-$LEARN mf3 gau
-$LEARN mf3 res
-$LEARN mf3 ave
+# $LEARN mf3 gau
+# $LEARN mf3 res
+# $LEARN mf3 ave
 
-$LEARN mf35     all
-$LEARN mf35-64  all-64
-$LEARN mf35-256 all-256
+
+$LEARN mf35     ori
+$LEARN mf35-64  ori-64
+$LEARN mf35-256 ori-256
+# $LEARN mf35     all
+# $LEARN mf35-64  all-64
+# $LEARN mf35-256 all-256

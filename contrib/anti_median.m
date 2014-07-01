@@ -1,13 +1,13 @@
-function fuck_median(pattern, source, dest, t)
+function anti_median(pattern, source, dest, s, t, a, b)
     files = dir(sprintf('%s/%s', source, pattern));
     for file = files'
       I = single(imread(sprintf('%s/%s', source, file.name)));
-      W = impulsenoiseBlock2(I, str2num(t));
+      W = impulsenoiseBlock2(I, str2num(s), str2num(t), str2num(a), str2num(b));
       imwrite(W, sprintf('%s/%s', dest, file.name));
     end
 end
 
-function result = impulsenoiseBlock2(I, thr)
+function result = impulsenoiseBlock2(I, s, thr, a, b)
     img = double(I);
     %% Saturation Blocks
     J = stdfilt(I);
@@ -15,7 +15,6 @@ function result = impulsenoiseBlock2(I, thr)
     fmap = zeros(size(I));
     result = I;
     [r, c] = size(I);
-    s = 3;
     BZ = 2;
     radius = floor(s/2);
     % one may change the step variable s to 1 to get overlaping blocks (for very
@@ -45,9 +44,8 @@ function result = impulsenoiseBlock2(I, thr)
     for i = 1:r
         for j = 1:c
             if (fmap(r,c) == 0 && J(i, j) >= thr)
-                a = 3; b = 7;
                 rn = a + (b-a) .* rand(1,1);
-                result(i,j) = result(i,j)+rn;
+                result(i,j) = result(i,j) + rn;
             end
         end
     end
