@@ -47,7 +47,7 @@ make_antidataset()
     bsize="$3"
     a="$4"
     b="$5"
-    dst_dir="anti-testcases/$s-$threshold-[$a-$b]"
+    dst_dir="anti-testcases/$s-$threshold-$a.$b"
 
     echo "$s-anti $threshold [$a-$b]"
     [ -d $dst_dir ] && return || mkdir -p "$dst_dir"

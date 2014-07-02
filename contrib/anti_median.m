@@ -6,7 +6,7 @@ function anti_median(pattern, source, dest, s, t, a, b)
       imwrite(W, sprintf('%s/%s', dest, file.name));
     end
 end
-function result = impulsenoiseBlock(I, s, thr, a, b)
+function result = impulsenoiseBlock(I, s, thr, rangea, rangeb)
 %
 % function result = impulsenoiseBlock(I,thr)
 %
@@ -60,7 +60,7 @@ for x = radius + 1 : s : r - radius
     end
 end
 %% random dithering matrix
-dit=randi([a b],r,c);
+dit=randi([rangea rangeb],r,c);
 %% Adding Dithering ,reduce the feature search in Kirchner,cao
 for i=1:r
     for j=1:c
