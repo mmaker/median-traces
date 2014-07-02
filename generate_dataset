@@ -27,8 +27,7 @@ RESIZE_64="-resize 110% -resize 64x64"
 RESIZE_256="-resize 110% -resize 256x256"
 
 UCID_DIR="dataset-j$COMPRESSION_LEVEL/ucid"
-mkdir -p $UCID_DIR
-tar xvf $DATASET -C $UCID_DIR
+[ ! -d $UCID_DIR ] && mkdir -p $UCID_DIR && tar xvf $DATASET -C $UCID_DIR
 cd $UCID_DIR
 
 make_dataset()

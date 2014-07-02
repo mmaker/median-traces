@@ -21,9 +21,9 @@ do_test()
 	mfdir="$DPATH/$a"
 
     accuracy=$($TEST $a $b --cls $a $antidir)
-	psnr=$($MEASURE psnr $mfdir $antidir | cut -d ' ' -f 1)
-	#ssim=$($MEASURE ssim $mfdir $antidir | cut -d ' ' -f 1)
-	printf "$a\t$t\t\[$range\]\t$accuracy\t$psnr\t$ssim\n"
+    psnr=$($MEASURE psnr $mfdir $antidir | cut -d ' ' -f 1)
+    #ssim=$($MEASURE ssim $mfdir $antidir | cut -d ' ' -f 1)
+    printf "$a\t$t\t\[$range\]\t$accuracy\t$psnr\t$ssim\n"
 }
 
 

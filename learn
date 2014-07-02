@@ -10,8 +10,7 @@ DPATH="$1"
 source config
 LEARN="python median_traces.py learn --path=$DPATH  --regex=$PATTERN_LEARN "
 
-echo $LEARN mf5 ori
-exit
+$LEARN mf5 ori
 # $LEARN mf5 gau
 # $LEARN mf5 res
 # $LEARN mf5 ave
