@@ -1,5 +1,5 @@
 PARALLEL="parallel"
-ANTI="`pwd`/contrib/run_anti_median.sh $HOME/.bin/MATLAB/R2014a/"
+ANTI="`pwd`/contrib/run_anti_median.sh /usr/local//MATLAB/R2014a/"
 THRESHOLDS=$(seq 1 0.5 5)
 NOISE_RANGES=("3 7" "8 12")
 
