@@ -3,6 +3,5 @@ ANTI="`pwd`/contrib/run_anti_median.sh $HOME/.bin/MATLAB/R2014a/"
 THRESHOLDS=$(seq 1 0.5 5)
 NOISE_RANGES=("3 7" "8 12")
 
-LEARN="python median_traces.py learn --path=$DPATH  --regex  'ucid00*.jpg' "
-TEST="python median_traces.py test   --path=$DPATH  --regex 'ucid01*.jpg' "
-MEASURE="python median_traces.py measure psnr"
+PATTERN_LEARN='ucid00*.jpg'
+PATTERN_TEST='ucid01*.jpg'

@@ -1,15 +1,17 @@
 #!/bin/bash
 
-if [ ! -d "$1" ]
-    then
+if [ ! -d "$1" ]; then
     echo "usage: $0 <dataset-path>"
     exit 1
 fi
 
 DPATH="$1"
-source config
 
-$LEARN mf5 ori
+source config
+LEARN="python median_traces.py learn --path=$DPATH  --regex=$PATTERN_LEARN "
+
+echo $LEARN mf5 ori
+exit
 # $LEARN mf5 gau
 # $LEARN mf5 res
 # $LEARN mf5 ave

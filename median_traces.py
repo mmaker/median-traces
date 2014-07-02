@@ -4,9 +4,9 @@
 «Revealing the Traces of Median Filtering Using High-Order Local Ternary Patterns».
 
 Usage:
-  median_traces.py extract [options] <dataset>
-  median_traces.py learn   [options] <dataset> <dataset>
-  median_traces.py test    [options] <dataset> <dataset> [--cls CLASS] <targets>...
+  median_traces.py extract [-p DIR] [-r REGEX] <dataset>
+  median_traces.py learn   [-p DIR] [-r REGEX] <dataset> <dataset>
+  median_traces.py test    [-p DIR] [-r REGEX] <dataset> <dataset> [--cls CLASS] <targets>...
   median_traces.py measure [-r REGEX] <unit> <targets> <targets>
   median_traces.py -h | --help
 

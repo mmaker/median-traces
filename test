@@ -7,7 +7,10 @@ if [ ! -d "$1" ]
 fi
 
 DPATH="$1"
+
 source config
+TEST="python median_traces.py test   --path=$DPATH  --regex $PATTERN_TEST "
+MEASURE="python median_traces.py measure psnr"
 
 do_test()
 {
