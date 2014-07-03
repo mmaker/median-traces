@@ -1,0 +1,356 @@
+\documentclass[10pt,a4paper]{report}
+\title{Cryptography Report}
+\author{Michele Orr\`u}
+
+\usepackage[
+  a4paper,
+  inner=1.5cm, outer=1.5cm,
+  top=3cm, bottom=3cm,
+  bindingoffset=1cm]{geometry}
+\usepackage[table]{xcolor}
+\usepackage[
+  font=small,
+  format=plain,
+  labelfont=bf,up,
+  textfont=normal,up,
+  justification=justified,
+  singlelinecheck=false]{caption}
+
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{float}
+\usepackage{minted}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{subcaption}
+
+\usepackage{wrapfig}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\definecolor{lightgray}{gray}{0.94}
+
+\usepackage{enumerate}
+\usepackage{hyperref}
+\usepackage[wide, rightcaption]{sidecap}
+
+\renewcommand{\thesection}{\Roman{section}}
+\newcommand{\strong}[1]{\textbf{#1}}
+
+\title{Data Hiding Report}
+\author{
+  Michele Orr\`u \\
+  \small{\texttt{michele.orru@studenti.unitn.it}}
+}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+The goal of this project consisted into achieving a working, efficient
+implementation of the paper \cite{mediantraces} and perform a number of
+experiments related to the recent developments in two sub-fields of forensic:
+\textsc{cg} vs natural \cite{splicing}, and antiforensic\cite{antiforensic}.
+The source code for the implementation is right now hosted at
+\url{https://github.com/mmaker/median-traces} and publicly available under the
+\texttt{BEERWARE} license.
+
+The two paths mentioned above, and further discussed in sections I, II,
+they both relied on the results expressed in \cite{mediantraces}:
+there, a new forensic algorithm was proposed, which is able to discriminate
+median-filtered images with an incredibly high accuracy, beating all other state
+of the art competitors in robustness against JPEG compression.
+
+Being the corner stone of my whole project, I started by re-implementing and
+testing \cite{mediantraces}'s median filter detector.
+After downloading the \textsc{ucid} dataset from prof. Gerald Schaefer's
+website, I created 3 datasets (\code{j100}, \code{j90}, \code{j70})
+converting to \textsc{jpeg} the overall $1338$ \textsc{tif} images,
+with quality factor $100$, $90$, and $70$ respectively.
+For each of the three \code{j*} datasets, I used \code{imagemagick} to crop a
+central square of $128 \times 128$ pixels, and then re-map the resulting images
+to grayscale. Let us call the output of this \code{ori}ginal dataset.
+At this point, I fed \code{imagemagick} again with each \code{j*/ori} dataset,
+applying a $3 \times 3$, $5 \times 5$ median filter (\code{mf3}, \code{mf5}
+datasets), a $3 \times 3$ average filter (\code{ave} dataset), one
+gaussian with $\sigma = 0.5$ (\code{gau}
+dataset), and a $110\%$ resize (\code{res} dataset).
+Finally, accordingly with \cite{mediantraces} \S 3\textit{B}, I extracted the LTPs from each
+dataset, and used them to classify a RBF-SVM (stacked over a linear KPCA in
+order to speed up the learning process and reduce the dimensionality of the features).
+Figure \ref{img:ltp} summarizes the accuracy resulted from 5-fold
+cross-validation, and is comparable with Figure 5(b) in \cite{antiforensic}.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[height=0.5\textwidth]{ltp.pdf}
+  \caption{Detection accuracies achieved by using the second-order LTP
+    features.\label{img:ltp}}
+\end{figure}
+
+Beyond the datasets above mentioned, there have been the means for performing
+extensive tests also with datasets sharing both $3 \times 3$ and $5 \times 5$
+median-filtered images (called \code{mf35} dataset), mixed datasets composed in
+equal percentage of \code{ori}, \code{gau}, \code{res}, \code{ave} images (called
+\code{all} dataset), and different sizes ($64 \times 64$ and $256 \times 256$
+pixels). This results performs as well pretty much the same to what stated in
+\cite{mediantraces}.
+
+The only thing worth mentioning here is that accuracy appears to be
+directly proportional with the image size, though this is not really breaking news.
+%% LINEAR KERNEL!
+
+\section{Computer-Generated Experiments}
+
+One of the core ideas of \cite{splicing} stands in the discovery that
+splicing detection can be foundamentally improved if we shift the pixel domain to the
+chroma components, prior to any further analysis.
+
+In the \texttt{YCbCr} domain, for example, it can be observed that authentic
+images always have ``fuzzy'' contours in the red, blue differences channels,
+meanwhile altered images tend to keep sharp contours around the spliced areas.
+
+We attempted to exploit this on a different domain, \textsc{cg vs} natural,
+under the assumption that the software commonly used for \textsc{cg} images
+usually applies some sort of noise-reduction algorithm in order to speed-up the
+rendering process.
+
+Specifically, I did the following: considered a set of \textsc{cg} and natural images,
+centrally cropped to a $128 \times 128$ pixel square, and then
+remapped the output to $4$ different datasets, one for each of the following
+channels: grayscale channel (\code{L}), luminance channel (\code{Y}), blue-color
+differences (\code{Cb}), and red-color differences (\code{Cr}).
+Finally, I extracted the second-order LTP features and trained a RBF-SVM
+classifier with them, in 5-fold cross-validation, extractely as in
+\cite{mediantraces} \S 3\textit{B}.
+
+\begin{SCtable}[3.0][h!]
+  \centering
+  \caption{Detection accuracy in 5-fold c.v. for \code{c}omputer-\code{g}enerated  against
+    natural (\textsc{pim}) images. The dataset was gently
+    concessed by the \textsc{mmlab}, and consisted of 1500  computer-generated
+    images randomly downloaded from the internet, and 1500 capturing
+    real-world (authentic images). Both have been centrally cropped to a
+    $128 \times 128$ pixel square.}
+
+  \rowcolors{3}{white}{lightgray}
+  \begin{tabular}{c|ccc}
+    & \small{Accuracy} \\ & \textsc{cg} vs \textsc{pim} \\
+    \hline
+    \code{L}  & 0.814 \\
+    \code{Y}  & 0.741 \\
+    \code{Cb} & 0.656 \\
+    \code{Cr} & 0.657 \\
+  \end{tabular}
+\end{SCtable}
+
+Afterwards, under the advice of doct.~Conotter, I attempted to collect a dataset of spliced
+images, with the goal of performing a similar experiment back in the field of
+\emph{splicing detection}. Her idea boiled down to replacing the gray level
+co-occurence matrix of the thresholded edge images with the LTPs, and test the
+behaviour of the resulting feature extraction method.
+However, the copyright law in force in
+USA prevented me from downloading the DVMM dataset
+employed in \cite{splicing} (non-thumbnail images). Lack of time and
+immediate availability of any dataset lead us to abandon this research path.
+
+\section{Antiforensic Experiments}
+
+Roughly speaking, \cite{mediantraces} exploited the main characteristic of
+median filters, - i.e. noise reduction - to construct an \emph{ad-hoc}
+\emph{directional} derivative for each pixel in the image.
+As I learned from \cite{antiforensic}, this is quite a common approach for
+median-filter detectors: most of them study the statistical pattern induced by a
+specific operator applied among adjacent pixels.
+In this case though, novelty was introduced by employing a \emph{second-order},
+\emph{local}, \emph{three-valued} operator, the local ternary pattern (LTP).
+ Its definition can be found in \cite{mediantraces} \S
+2\textit{A}. The histogram resulting from the overall LTPs extracted from the
+image was in fact the feature set used to train a support vector machine.
+
+With \cite{antiforensic} we learned also that median classifiers are quite fragile
+tools: even adding small perturbations interfering with the
+footprint left by filtering performs fairly well as counter-forensic approach.
+Furthermore, the paper in question suggested the
+addition of random noise only into highly textured blocks, so that degradation would
+be minimized while still interfering with the characteristics left by median
+filtering.
+
+More precisely, first we extract the features \strong{h}$^{\textsc{obc}}$,
+\strong{h}$^{\textsc{dbm}}$ defined in \cite{antiforensic} \S 2\textit{C},
+discarding those blocks of dimension $B \times B$ which contribute to those features,
+and consider the remaining blocks. Such group is again filtered for
+highly textured areas (whose standard deviation $\sigma > T$ threshold). What
+remains will be representative blocks of highly textured areas in the image, and
+we do add a random small perturbation to these blocks, in the interval $\pm J
+\subset \mathbb{Z}$ closed.
+We slightly modified version of algorithm 1 in \cite{antiforensic}, line $7$, in
+order to arbitrarily add the $J$, and do not bind it to $[3, 7] \cap \mathbb{Z}$.
+
+I tried to measure the performance of \cite{mediantraces}'s algorithm with
+respect to the antiforensic attack proposed in \cite{antiforensic}, assuming the
+following scenario.
+An \emph{oracle} receives any image as input and returns a boolean value
+depending on whether median filter traces are found or not. A \emph{malicious attacker}
+uses previously median-filtered images, and subsequently applies the
+antiforensic tool described above. Hopefully, the oracle shall be robust
+against the attacker.
+
+\begin{enumerate}
+\item First, for each \code{j100}, \code{j90}, \code{j70} collection of
+  datasets previously described, I considered the first $1000$
+  \textsc{ucid} images from \code{ori}, \code{mf3} and \code{mf5}, and trained
+  an SVM (in five-fold cross validation) to correctly discriminate original from
+  median-filtered images. Let the resulting classifiers be our \emph{oracle}.
+
+  Again, detection accuracy for the oracles is comparable with Figure \ref{img:ltp}. As
+  supporting proof for this, I propose immediatly down here a table for the
+  detection accuracies found after 5-fold cross validation for \code{j100} and \code{j90}:
+
+\vfill
+\begin{table}[!htbp]
+    \centering
+
+    \begin{subtable}{.4\linewidth}
+    \rowcolors{3}{white}{lightgray}
+    \begin{tabular}{r|ccc}
+      & \small{Accuracy} \\  &   \code{j100/ori}\\
+      \hline
+      \code{j100/mf3}  & 0.999 \\
+      \code{j100/mf5}  & 0.999 \\
+      \code{j100/mf35} & 1.000 \\
+      \tiny{$64$ px}   \normalsize{\code{j100/mf35}} & 0.996 \\
+      \tiny{$256$ px} \normalsize{\code{j100/mf35}}  & 1.000 \\
+    \end{tabular}
+    \end{subtable}
+    \begin{subtable}{.4\linewidth}
+    \rowcolors{3}{white}{lightgray}
+    \begin{tabular}{r|ccc}
+      & \small{Accuracy} \\  &   \code{j90/ori}\\
+      \hline
+      \code{j90/mf3}  & 0.978 \\
+      \code{j90/mf5}  & 0.989 \\
+      \code{j90/mf35} & 0.980 \\
+      \tiny{$64$ px}   \normalsize{\code{j90/mf35}} & 0.949 \\
+      \tiny{$256$ px} \normalsize{\code{j90/mf35}}  & 0.994 \\
+    \end{tabular}
+    \end{subtable}
+
+    \caption{Detection accuracies achieved by using the first 1000 second-order LTP
+      features extracted from the \textsc{ucid} dataset, for JPEG compression
+      100, 90. Dataset \code{mf35} contains both $3 \times 3 $ median filtered
+      images, and $5 \times 5$ ones, in equal percentage. In both tables, the
+      last two rows present the very same mix, but for datasets of
+      respectively $64 \times 64$ and $256 \times 256$ pixels of
+      size, in oder to give a glimpse about the overall trend for different
+      image sizes.}
+\end{table}
+
+\item Secondly, I applied the antiforensic algorithm of \cite{antiforensic} to
+  the remaining $338$ images in \code{j*/mf3} and \code{j*/mf5}, setting the
+  block size $B$ to $3$ and $5$ respectively, and for combinations of the
+  different parameters $T \in \{1, 2, \dots 5\}$, and $I \in \{ [1, 4] \cap
+  \mathbb{Z}, [3, 7] \cap
+  \mathbb{Z}, [8, 12] \cap \mathbb{Z}\}$.
+
+ As we can guess, higher values in $J$ implies more noise, and therefore on
+ one hand degradation, on the other a higher probability to hide median
+ traces. Meanwhile, higher values of $T$ will filter for more blocks, cutting off
+ those with a lower $\sigma$, which means quality preservation (less degradation).
+
+ \begin{figure}[!htbp]
+   \centering
+   \includegraphics[width=0.7\linewidth]{degradation.pdf}
+  \caption{Average degradation for different JPEG compression quality factors, and noise
+    intervals $J$. \label{img:degradation}}
+\end{figure}
+
+\item Lastly, I fed the oracle with the generated antiforensic images, and
+  measured its overall performance. Table \ref{tab:overall} summarizes what I
+  have found.
+  Differently from what we expected above, the algorithm proposed in  \cite{mediantraces}
+  is not really resistant against the counter-forensic approach undertaken by
+  \cite{antiforensic}.
+
+  \begin{table}[h!]
+    \centering
+    \begin{tabular}{|c|c|c|cc|}\hline
+      Collection  & Interval $J$ & Dataset & PSNR & Accuracy \\ \hline
+      \multirow{4}{*}{\code{j100}} & \multirow{2}{*}{[1 4]} & \code{mf3} & 36.181 & 0.127 \\
+                                   &                        & \code{mf5} & 37.976 & 0.369 \\ \cline{2-5}
+                                   & \multirow{2}{*}{[3 7]} & \code{mf3} & 34.775 & 0.062 \\
+                                   &                        & \code{mf5} & 36.443 & 0.198 \\
+      \hline
+      \multirow{4}{*}{\code{j90}}  & \multirow{2}{*}{[1 4]} & \code{mf3} & 35.900 & 0.091 \\
+                                   &                        & \code{mf5} & 37.901 & 0.313 \\ \cline{2-5}
+                                   & \multirow{2}{*}{[3 7]} & \code{mf3} & 34.356 & 0.065 \\
+                                   &                        & \code{mf5} & 36.283 & 0.218 \\
+      \hline
+      \multirow{4}{*}{\code{j70}}  & \multirow{2}{*}{[3 7]} & \code{mf3} & 39.124 & 0.876 \\
+                                   &                        & \code{mf5} & 40.551 & 0.935 \\ \cline{2-5}
+                                   & \multirow{2}{*}{[8 12]}& \code{mf3} & 32.108 & 0.292 \\
+                                   &                        & \code{mf5} & 33.553 & 0.501 \\
+      \hline
+    \end{tabular}
+    \caption{Detection accuracy of the oracle tested against the 338 test
+      images, with constant $T=5.0$, for different JPEG compressions, over
+      different intervals $J$, over different
+      datasets. \label{tab:overall}}
+  \end{table}
+
+ \vspace{10pt}
+\end{enumerate}
+
+\vspace{10pt}
+
+\section{Conclusions and Drawbacks}
+
+The algorithm proposed in \cite{mediantraces} behaves surprisingly well in
+classifying \textsc{cg} vs natural images.
+Reasons for this can be found in the way software commonly used for creating
+\textsc{cg} images optimizes the rendering process.
+
+Unfortunately though, using a chroma domain in place of grayscale
+worsen the performance of the classifier revealing median traces. This might be
+because a single color-difference channel has not enough noise information to be
+relevant in the classification of median filtered versus original images.
+
+\vspace{10pt}
+
+In the last experiment, we saw that classifiers trained on JPEG compression
+performs better in counter-forensic conditions.
+A stronger addition of noise can still foil a correct classification,
+even though at the price of losing almost all of the information in the image.
+
+
+% If I think of Science, and this is my strictly personal opinion, I
+% think first about a collaborative mutual exchange of ideas, and the economic elegance
+% of Nature. It shall be the purpose of the university to be the uterus for such
+% an environment. \\
+% and if so, why shall I be blamed for using a software that anybody can use instead of commercial ones? \\
+% and if so, why publications are not really \emph{public}? \\
+% and if so, why the experience of the older is not to prevent the errors of the youngest?
+
+
+\begin{thebibliography}{9}
+  \bibitem{mediantraces}
+      Yujin Zhang and Shenghong Li and Shilin Wang and Yun Qing Shi,
+      Signal Processing Letters, IEEE,
+      \emph{Revealing the Traces of Median Filtering Using High-Order
+        Local Ternary Patterns}
+  \bibitem{splicing}
+      Wei Wang and Jing Dong and Tieniu Tan,
+      Image Processing (ICIP), 2009 16th IEEE International Conference on,
+      \emph{Effective image splicing detection based on image chroma}
+  \bibitem{antiforensic}
+      Dang-Nguyen, Duc-Tien and Gebru, Israel Dejene and Conotter, Valentina,
+      and Boato, Giulia and De Natale, Francesco G B,
+      IEEE International Workshop on Multimedia Signal Processing,
+      \emph{Counter-forensics of median filtering}
+\end{thebibliography}
+
+\end{document}
