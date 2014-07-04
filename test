@@ -10,7 +10,7 @@ DPATH="$1"
 
 source config
 TEST="python median_traces.py test -p $DPATH  -r $PATTERN_TEST "
-MEASURE="python median_traces.py measure "
+MEASURE_PSNR="python median_traces.py measure psnr -r $PATTERN_TEST "
 
 do_test()
 {
@@ -22,7 +22,7 @@ do_test()
     mfdir="$DPATH/$a"
 
     accuracy=$($TEST $a $b --cls $a $antidir)
-    psnr=$($MEASURE psnr $mfdir $antidir | cut -d ' ' -f 1)
+    psnr=$($MEASURE_PSNR $mfdir $antidir | cut -d ' ' -f 1)
     #ssim=$($MEASURE ssim $mfdir $antidir | cut -d ' ' -f 1)
     printf "$a\t$t\t[$range]\t$accuracy\t$psnr\t$ssim\n"
 }
