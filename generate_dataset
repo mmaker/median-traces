@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 if [ ! \( -r "$1" \) -o \( -z "$2" \) ]
     then
@@ -59,58 +60,69 @@ PATTERN='*.tif'
 make_dataset ori $CROP $DOMAIN           $COMPRESS
 make_dataset mf3 $CROP $DOMAIN $MEDIAN3  $COMPRESS
 make_dataset mf5 $CROP $DOMAIN $MEDIAN5  $COMPRESS
-# make_dataset gau $CROP $DOMAIN $GAUSSIAN $COMPRESS
-# make_dataset res $CROP $DOMAIN $RESIZE   $COMPRESS
-# make_dataset ave $CROP $DOMAIN $AVERAGE  $COMPRESS
+make_dataset gau $CROP $DOMAIN $GAUSSIAN $COMPRESS
+make_dataset res $CROP $DOMAIN $RESIZE   $COMPRESS
+make_dataset ave $CROP $DOMAIN $AVERAGE  $COMPRESS
 
 PATTERN='*[0-7][0-9][02468].tif'
 make_dataset mf35 $CROP $DOMAIN $MEDIAN3 $COMPRESS
 PATTERN='*[0-7][0-9][13579].tif'
 make_dataset mf35 $CROP $DOMAIN $MEDIAN5 $COMPRESS
 
-# PATTERN='ucid00[0-1]*.tif'
-# make_dataset all $CROP $DOMAIN           $COMPRESS
-# PATTERN='ucid00[2-3]*.tif'
-# make_dataset all $CROP $DOMAIN $AVERAGE  $COMPRESS
-# PATTERN='ucid00[4-5]*.tif'
-# make_dataset all $CROP $DOMAIN $GAUSSIAN $COMPRESS
-# PATTERN='ucid00[6-7].tif'
-# make_dataset all $CROP $DOMAIN $RESIZE   $COMPRESS
+PATTERN='ucid00[0-1]*.tif'
+make_dataset all $CROP $DOMAIN           $COMPRESS
+PATTERN='ucid00[2-3]*.tif'
+make_dataset all $CROP $DOMAIN $AVERAGE  $COMPRESS
+PATTERN='ucid00[4-5]*.tif'
+make_dataset all $CROP $DOMAIN $GAUSSIAN $COMPRESS
+PATTERN='ucid00[6-7].tif'
+make_dataset all $CROP $DOMAIN $RESIZE   $COMPRESS
 
 # 64x64 images, with jpeg compression
+PATTERN='*.tif'
 make_dataset ori-64 $CROP_64 $DOMAIN $COMPRESS
+make_dataset mf3-64 $CROP_64 $DOMAIN $MEDIAN3  $COMPRESS
+make_dataset mf5-64 $CROP_64 $DOMAIN $MEDIAN5  $COMPRESS
+make_dataset gau-64 $CROP_64 $DOMAIN $GAUSSIAN $COMPRESS
+make_dataset res-64 $CROP_64 $DOMAIN $RESIZE   $COMPRESS
+make_dataset ave-64 $CROP_64 $DOMAIN $AVERAGE  $COMPRESS
 
 PATTERN='*[0-7][0-9][02468].tif'
 make_dataset mf35-64 $CROP_64 $DOMAIN $MEDIAN3 $COMPRESS
 PATTERN='*[0-7][0-9][13579].tif'
 make_dataset mf35-64 $CROP_64 $DOMAIN $MEDIAN5 $COMPRESS
 
-# PATTERN='ucid00[0-1]*.tif'
-# make_dataset all-64 $CROP_64 $DOMAIN            $COMPRESS
-# PATTERN='ucid00[2-3]*.tif'
-# make_dataset all-64 $CROP_64 $DOMAIN $AVERAGE   $COMPRESS
-# PATTERN='ucid00[4-5]*.tif'
-# make_dataset all-64 $CROP_64 $DOMAIN $GAUSSIAN  $COMPRESS
-# PATTERN='ucid00[6-7].tif'
-# make_dataset all-64 $CROP_64 $DOMAIN $RESIZE_64 $COMPRESS
+PATTERN='ucid00[0-1]*.tif'
+make_dataset all-64 $CROP_64 $DOMAIN            $COMPRESS
+PATTERN='ucid00[2-3]*.tif'
+make_dataset all-64 $CROP_64 $DOMAIN $AVERAGE   $COMPRESS
+PATTERN='ucid00[4-5]*.tif'
+make_dataset all-64 $CROP_64 $DOMAIN $GAUSSIAN  $COMPRESS
+PATTERN='ucid00[6-7].tif'
+make_dataset all-64 $CROP_64 $DOMAIN $RESIZE_64 $COMPRESS
 
 # 256x256 images, with jpeg compression
 PATTERN='*.tif'
-make_dataset ori-256  $CROP_256 $DOMAIN $COMPRESS
+make_dataset ori-256 $CROP_256 $DOMAIN $COMPRESS
+make_dataset mf3-256 $CROP_256 $DOMAIN $MEDIAN3  $COMPRESS
+make_dataset mf5-256 $CROP_256 $DOMAIN $MEDIAN5  $COMPRESS
+make_dataset gau-256 $CROP_256 $DOMAIN $GAUSSIAN $COMPRESS
+make_dataset res-256 $CROP_256 $DOMAIN $RESIZE   $COMPRESS
+make_dataset ave-256 $CROP_256 $DOMAIN $AVERAGE  $COMPRESS
 
 PATTERN='*[0-7][0-9][02468].tif'
 make_dataset mf35-256 $CROP_256 $DOMAIN $MEDIAN3 $COMPRESS
 PATTERN='*[0-7][0-9][13579].tif'
 make_dataset mf35-256 $CROP_256 $DOMAIN $MEDIAN5 $COMPRESS
 
-# PATTERN='ucid00[0-1]*.tif'
-# make_dataset all-256 $CROP_256 $DOMAIN             $COMPRESS
-# PATTERN='ucid00[2-3]*.tif'
-# make_dataset all-256 $CROP_256 $DOMAIN $AVERAGE    $COMPRESS
-# PATTERN='ucid00[4-5]*.tif'
-# make_dataset all-256 $CROP_256 $DOMAIN $GAUSSIAN   $COMPRESS
-# PATTERN='ucid00[6-7]*.tif'
-# make_dataset all-256 $CROP_256 $DOMAIN $RESIZE_256 $COMPRESS
+PATTERN='ucid00[0-1]*.tif'
+make_dataset all-256 $CROP_256 $DOMAIN             $COMPRESS
+PATTERN='ucid00[2-3]*.tif'
+make_dataset all-256 $CROP_256 $DOMAIN $AVERAGE    $COMPRESS
+PATTERN='ucid00[4-5]*.tif'
+make_dataset all-256 $CROP_256 $DOMAIN $GAUSSIAN   $COMPRESS
+PATTERN='ucid00[6-7]*.tif'
+make_dataset all-256 $CROP_256 $DOMAIN $RESIZE_256 $COMPRESS
 
 
 # anti dataset
@@ -123,7 +135,14 @@ for t in $THRESHOLDS; do
         make_antidataset mf3      $t 3 $range
         make_antidataset mf5      $t 5 $range
         make_antidataset mf35     $t 5 $range
+
+        make_antidataset mf3-64   $t 3 $range
+        make_antidataset mf5-64   $t 5 $range
         make_antidataset mf35-64  $t 5 $range
-        make_antidataset mf35-256 $t 5 $range
+
+        make_antidataset mf3-256   $t 3 $range
+        make_antidataset mf5-256   $t 5 $range
+        make_antidataset mf35-256  $t 5 $range
+
     done
 done

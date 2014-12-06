@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 if [ ! -d "$1" ]; then
     echo "usage: $0 <dataset-path>"
@@ -11,19 +12,42 @@ source config
 LEARN="python median_traces.py learn --path=$DPATH  --regex=$PATTERN_LEARN "
 
 $LEARN mf5 ori
-# $LEARN mf5 gau
-# $LEARN mf5 res
-# $LEARN mf5 ave
+$LEARN mf5 gau
+$LEARN mf5 res
+$LEARN mf5 ave
 
 $LEARN mf3 ori
-# $LEARN mf3 gau
-# $LEARN mf3 res
-# $LEARN mf3 ave
-
+$LEARN mf3 gau
+$LEARN mf3 res
+$LEARN mf3 ave
 
 $LEARN mf35     ori
+$LEARN mf35     all
+
+
+$LEARN mf3-64 ori-64
+$LEARN mf3-64 gau-64
+$LEARN mf3-64 res-64
+$LEARN mf3-64 ave-64
+
+$LEARN mf5-64 ori-64
+$LEARN mf5-64 gau-64
+$LEARN mf5-64 res-64
+$LEARN mf5-64 ave-64
+
 $LEARN mf35-64  ori-64
+$LEARN mf35-64  all-64
+
+
+$LEARN mf3-256 ori-256
+$LEARN mf3-256 gau-256
+$LEARN mf3-256 res-256
+$LEARN mf3-256 ave-256
+
+$LEARN mf5-256 ori-256
+$LEARN mf5-256 gau-256
+$LEARN mf5-256 res-256
+$LEARN mf5-256 ave-256
+
 $LEARN mf35-256 ori-256
-# $LEARN mf35     all
-# $LEARN mf35-64  all-64
-# $LEARN mf35-256 all-256
+$LEARN mf35-256 all-256
