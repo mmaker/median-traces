@@ -31,9 +31,36 @@ do_test()
 for t in $THRESHOLDS; do
     for range in "${NOISE_RANGES[@]}"; do
         do_test mf3      ori     $t $range
+        do_test mf3      gau     $t $range
+        do_test mf3      res     $t $range
+        do_test mf3      ave     $t $range
         do_test mf5      ori     $t $range
+        do_test mf5      gau     $t $range
+        do_test mf5      res     $t $range
+        do_test mf5      ave     $t $range
         do_test mf35     ori     $t $range
-        do_test mf35-64  ori-64  $t $range
-        do_test mf35-256 ori-256 $t $range
+
+        do_test mf3-64      ori-64     $t $range
+        do_test mf3-64      gau-64     $t $range
+        do_test mf3-64      res-64     $t $range
+        do_test mf3-64      ave-64     $t $range
+        do_test mf5-64      ori-64     $t $range
+        do_test mf5-64      gau-64     $t $range
+        do_test mf5-64      res-64     $t $range
+        do_test mf5-64      ave-64     $t $range
+        do_test mf35-64     ori-64     $t $range
+
+        do_test mf3-256      ori-256     $t $range
+        do_test mf3-256      gau-256     $t $range
+        do_test mf3-256      res-256     $t $range
+        do_test mf3-256      ave-256     $t $range
+        do_test mf5-256      ori-256     $t $range
+        do_test mf5-256      gau-256     $t $range
+        do_test mf5-256      res-256     $t $range
+        do_test mf5-256      ave-256     $t $range
+        do_test mf35-256     ori-256     $t $range
+
+
+
     done
 done

@@ -40,7 +40,6 @@ from sklearn.grid_search import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import normalize
 
-from skimage.measure import structural_similarity as ssim
 
 
 __version__ = float('nan')
@@ -288,5 +287,5 @@ if __name__ == '__main__':
 
     elif args['measure']:
         a, b = args['<targets>']
-        measuref = dict(psnr=psnr, ssim=ssim)[args['<unit>']]
+        measuref = dict(psnr=psnr)[args['<unit>']]
         measure(a, b, measuref=measuref)
