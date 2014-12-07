@@ -18,7 +18,7 @@ MEDIAN3="-median 3"
 MEDIAN5="-median 5"
 GAUSSIAN="-gaussian-blur 0.5"
 AVERAGE="-define convolve:scale=! -morphology Convolve square:3"
-COMPRESS="-format jpg -quality $COMPRESSION_LEVEL%"
+#COMPRESS="-format jpg -quality $COMPRESSION_LEVEL%"
 CROP="-gravity center -crop 128x128+0+0"
 CROP_64="-gravity center -crop 64x64+0+0"
 CROP_256="-gravity center -crop 256x256+0+0"
@@ -37,7 +37,7 @@ make_dataset()
     pattern="$2"
     args="${@:2:$#}"
     [ -d "$dataset_dir" ] && return || mkdir "$dataset_dir"
-    find . -name "$PATTERN" | $PARALLEL convert {} $args "$dataset_dir/{.}.jpg"
+    find . -name "$PATTERN" | $PARALLEL convert {} $args "$dataset_dir/{.}.tif"
 }
 
 make_antidataset()
@@ -124,7 +124,7 @@ make_dataset all-256 $CROP_256 $DOMAIN $RESIZE_256 $COMPRESS
 
 
 # anti dataset
-PATTERN='ucid01*.jpg'
+PATTERN='ucid01*.tif'
 cd ..
 mkdir -p anti-testcases
 

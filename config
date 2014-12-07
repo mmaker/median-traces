@@ -3,5 +3,5 @@ ANTI="`pwd`/contrib/run_anti_median.sh /usr/local//MATLAB/R2014a/"
 THRESHOLDS=$(printf '2\n5')
 NOISE_RANGES=("0 1" "3 7" "4 8" "5 9")
 
-PATTERN_LEARN='ucid00*.jpg'
-PATTERN_TEST='ucid01*.jpg'
+PATTERN_LEARN='ucid00*.tif'
+PATTERN_TEST='ucid01*.tif'
