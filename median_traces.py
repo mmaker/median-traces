@@ -217,13 +217,6 @@ def test(a, b, targets, targets_class=None):
     :param str b:
     :param list targets: list of glob patterns, directories, single files.
     """
-    # load classificator. If not found, create it.
-    try:
-        clf = _load(os.path.join(dataset_path, CLF_FILE_TEMPLATE(a, b)))
-    except IOError, ValueError:
-        clf = learn(a, b)
-
-    # Create test cases
     targets = [target if not os.path.isdir(target) else
                os.path.join(target, images_regex)
                for target in targets
@@ -231,10 +224,18 @@ def test(a, b, targets, targets_class=None):
                if not target.endswith('features.npy')
     ]
     files = reduce(add, map(glob, targets))
+    if not files:
+        raise OSError('No such file or directory')
     # features = [extract_feature(file) for file in files]
     tests = Pool().map(extract_feature_from_file, files)
     tests = normalize(np.array(tests, dtype='float64'))
+    # load classificator. If not found, create it.
+    try:
+        clf = _load(os.path.join(dataset_path, CLF_FILE_TEMPLATE(a, b)))
+    except IOError, ValueError:
+        clf = learn(a, b)
 
+    # Create test cases
     if targets_class is None:
         predicted = clf.predict(tests)
         for file, prediction in izip(files, predicted):
