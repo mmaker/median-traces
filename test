@@ -9,7 +9,7 @@ fi
 DPATH="$1"
 
 source config
-TEST="python median_traces.py test -p $DPATH  -r $PATTERN_TEST "
+TEST="python median_traces.py test -p $DPATH "
 MEASURE_PSNR="python median_traces.py measure psnr -r $PATTERN_TEST "
 
 do_test()
@@ -18,16 +18,18 @@ do_test()
     b="$2"
     t="$3"
 
-    antidir="$DPATH/anti-testcases/$a-$t-$4.$5/"
+    anti_dir="$DPATH/anti-testcases/$a-$t-$4.$5/"
+    anti_tests="$anti_dir/$PATTERN_TESTA"
+    filt_tests="$DPATH/$b/$PATTERN_TESTB"
     mfdir="$DPATH/$a"
 
-    accuracy=$($TEST $a $b --cls $a $antidir)
-    psnr=$($MEASURE_PSNR $mfdir $antidir | cut -d ' ' -f 1)
+    accuracy=$($TEST $a $b $5anti_tests $filt_tests)
+    psnr=$($MEASURE_PSNR $mfdir $anti_dir | cut -d ' ' -f 1)
     #ssim=$($MEASURE ssim $mfdir $antidir | cut -d ' ' -f 1)
     printf "$a\t$b\t$t\t[$range]\t$accuracy\t$psnr\t$ssim\n"
 }
 
-
+printf "MEDIAN\tFILTER\tNOISE\tACCURACY\tPSNR\n"
 for t in $THRESHOLDS; do
     for range in "${NOISE_RANGES[@]}"; do
         do_test mf3      ori     $t $range

@@ -124,9 +124,8 @@ make_dataset all-256 $CROP_256 $DOMAIN $GAUSSIAN   $COMPRESS
 PATTERN='ucid00[6-7]*.tif'
 make_dataset all-256 $CROP_256 $DOMAIN $RESIZE_256 $COMPRESS
 
-
 # anti dataset
-PATTERN='ucid01*.jpg'
+PATTERN=$PATTERN_TEST
 cd ..
 mkdir -p anti-testcases
 

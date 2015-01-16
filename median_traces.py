@@ -6,7 +6,7 @@
 Usage:
   median_traces.py extract [-p DIR] [-r REGEX] <dataset>
   median_traces.py learn   [-p DIR] [-r REGEX] <dataset> <dataset>
-  median_traces.py test    [-p DIR] [-r REGEX] <dataset> <dataset> [--cls CLASS] <targets>...
+  median_traces.py test    [-p DIR] [-r REGEX] <dataset> <dataset> <targets>...
   median_traces.py measure [-r REGEX] <unit> <targets> <targets>
   median_traces.py -h | --help
 
@@ -236,14 +236,9 @@ def test(a, b, targets, targets_class=None):
         clf = learn(a, b)
 
     # Create test cases
-    if targets_class is None:
-        predicted = clf.predict(tests)
-        for file, prediction in izip(files, predicted):
-            print('{}\t{}'.format(file, prediction))
-
-    else:
-        score = clf.score(tests, np.repeat(targets_class, len(tests)))
-        print('{:3.3f}'.format(score))
+    predictions = [b if b in file else a for file in files]
+    score = clf.score(tests, predictions)
+    print('{:3.3f}'.format(score))
 
 def measure(a, b, measuref=psnr):
     """
@@ -283,8 +278,7 @@ if __name__ == '__main__':
     elif args['test']:
         a, b = datasets
         targets = args['<targets>']
-        targets_class = args['--cls']
-        test(a, b, targets, targets_class)
+        test(a, b, targets)
 
     elif args['measure']:
         a, b = args['<targets>']
