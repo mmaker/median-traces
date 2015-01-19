@@ -15,7 +15,6 @@ Options:
   -v --version        Print version number.
   -p, --path=DIR      Specifies dataset path [default: dataset/].
   -r, --regex=REGEX   Specifies regex for locating images [default: *.jpg].
-  --samples=INT       Specifies the number of samples when plotting [default: 30].
   --cls CLASS         Specifies that all test inputs belong to the same class, and output accuracy.
 """
 from __future__ import division, print_function
@@ -186,6 +185,8 @@ def learn(a, b):
     features_a = np.array(extract_dataset(a), dtype='float64')
     features_b = np.array(extract_dataset(b), dtype='float64')
     features = np.concatenate((features_a, features_b))
+    if len(features) == 0:
+        raise OSError('No such file or directory')
 
     pca = decomposition.KernelPCA(kernel='linear')
     clf = svm.SVC(kernel='rbf')
@@ -236,7 +237,7 @@ def test(a, b, targets, targets_class=None):
         clf = learn(a, b)
 
     # Create test cases
-    predictions = [b if b in file else a for file in files]
+    predictions = [a if a in file else b for file in files]
     score = clf.score(tests, predictions)
     print('{:3.3f}'.format(score))
 

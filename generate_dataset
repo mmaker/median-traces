@@ -11,6 +11,12 @@ fi
 # <http://homepages.lboro.ac.uk/~cogs/datasets/ucid/data/ucid.v2.tar.gz>
 DATASET="$1"
 COMPRESSION_LEVEL="$2"
+if [ $COMPRESSION_LEVEL -gt 100 ]; then
+    FILEFORMAT='tif'
+else
+    FILEFORMAT='jpg'
+fi
+
 source config
 
 DOMAIN="-colorspace gray"
@@ -19,7 +25,7 @@ MEDIAN3="-median 3"
 MEDIAN5="-median 5"
 GAUSSIAN="-gaussian-blur 0.5"
 AVERAGE="-define convolve:scale=! -morphology Convolve square:3"
-COMPRESS="-format jpg -quality $COMPRESSION_LEVEL%"
+[ $FILEFORMAT == 'jpg' ] && COMPRESS="-format jpg -quality $COMPRESSION_LEVEL%"
 CROP="-gravity center -crop 128x128+0+0"
 CROP_64="-gravity center -crop 64x64+0+0"
 CROP_256="-gravity center -crop 256x256+0+0"
@@ -38,7 +44,7 @@ make_dataset()
     pattern="$2"
     args="${@:2:$#}"
     [ -d "$dataset_dir" ] && return || mkdir "$dataset_dir"
-    find . -name "$PATTERN" | $PARALLEL convert {} $args "$dataset_dir/{.}.jpg"
+    find . -name "$PATTERN" | $PARALLEL convert {} $args "$dataset_dir/{.}.$FILEFORMAT"
 }
 
 make_antidataset()
@@ -55,8 +61,8 @@ make_antidataset()
     $ANTI $PATTERN $s $dst_dir $bsize $threshold $range
 }
 
-# 128x128 images, with jpeg compression.
-PATTERN='*.tif'
+# 128x128 images
+PATTERN='ucid*'
 make_dataset ori $CROP $DOMAIN           $COMPRESS
 make_dataset mf3 $CROP $DOMAIN $MEDIAN3  $COMPRESS
 make_dataset mf5 $CROP $DOMAIN $MEDIAN5  $COMPRESS
@@ -64,22 +70,22 @@ make_dataset gau $CROP $DOMAIN $GAUSSIAN $COMPRESS
 make_dataset res $CROP $DOMAIN $RESIZE   $COMPRESS
 make_dataset ave $CROP $DOMAIN $AVERAGE  $COMPRESS
 
-PATTERN='*[0-7][0-9][02468].tif'
+PATTERN='ucid*[02468].*'
 make_dataset mf35 $CROP $DOMAIN $MEDIAN3 $COMPRESS
-PATTERN='*[0-7][0-9][13579].tif'
+PATTERN='ucid*[13579].*'
 make_dataset mf35 $CROP $DOMAIN $MEDIAN5 $COMPRESS
 
-PATTERN='ucid00[0-1]*.tif'
+PATTERN='ucid*[0-1].*'
 make_dataset all $CROP $DOMAIN           $COMPRESS
-PATTERN='ucid00[2-3]*.tif'
+PATTERN='ucid0*[2-3].*'
 make_dataset all $CROP $DOMAIN $AVERAGE  $COMPRESS
-PATTERN='ucid00[4-5]*.tif'
+PATTERN='ucid0*[4-5].*'
 make_dataset all $CROP $DOMAIN $GAUSSIAN $COMPRESS
-PATTERN='ucid00[6-7].tif'
+PATTERN='ucid0*[6-7].*'
 make_dataset all $CROP $DOMAIN $RESIZE   $COMPRESS
 
-# 64x64 images, with jpeg compression
-PATTERN='*.tif'
+# 64x64 images
+PATTERN='ucid*'
 make_dataset ori-64 $CROP_64 $DOMAIN $COMPRESS
 make_dataset mf3-64 $CROP_64 $DOMAIN $MEDIAN3  $COMPRESS
 make_dataset mf5-64 $CROP_64 $DOMAIN $MEDIAN5  $COMPRESS
@@ -87,22 +93,22 @@ make_dataset gau-64 $CROP_64 $DOMAIN $GAUSSIAN $COMPRESS
 make_dataset res-64 $CROP_64 $DOMAIN $RESIZE   $COMPRESS
 make_dataset ave-64 $CROP_64 $DOMAIN $AVERAGE  $COMPRESS
 
-PATTERN='*[0-7][0-9][02468].tif'
+PATTERN='ucid*[0-4].*'
 make_dataset mf35-64 $CROP_64 $DOMAIN $MEDIAN3 $COMPRESS
-PATTERN='*[0-7][0-9][13579].tif'
+PATTERN='ucid*[5-9].*'
 make_dataset mf35-64 $CROP_64 $DOMAIN $MEDIAN5 $COMPRESS
 
-PATTERN='ucid00[0-1]*.tif'
+PATTERN='ucid*[0-1].*'
 make_dataset all-64 $CROP_64 $DOMAIN            $COMPRESS
-PATTERN='ucid00[2-3]*.tif'
+PATTERN='ucid*[2-3].*'
 make_dataset all-64 $CROP_64 $DOMAIN $AVERAGE   $COMPRESS
-PATTERN='ucid00[4-5]*.tif'
+PATTERN='ucid*[4-5].*'
 make_dataset all-64 $CROP_64 $DOMAIN $GAUSSIAN  $COMPRESS
-PATTERN='ucid00[6-7].tif'
+PATTERN='ucid*[6-7].*'
 make_dataset all-64 $CROP_64 $DOMAIN $RESIZE_64 $COMPRESS
 
-# 256x256 images, with jpeg compression
-PATTERN='*.tif'
+# 256x256 images
+PATTERN='ucid*'
 make_dataset ori-256 $CROP_256 $DOMAIN $COMPRESS
 make_dataset mf3-256 $CROP_256 $DOMAIN $MEDIAN3  $COMPRESS
 make_dataset mf5-256 $CROP_256 $DOMAIN $MEDIAN5  $COMPRESS
@@ -110,18 +116,18 @@ make_dataset gau-256 $CROP_256 $DOMAIN $GAUSSIAN $COMPRESS
 make_dataset res-256 $CROP_256 $DOMAIN $RESIZE   $COMPRESS
 make_dataset ave-256 $CROP_256 $DOMAIN $AVERAGE  $COMPRESS
 
-PATTERN='*[0-7][0-9][02468].tif'
+PATTERN='ucid*[0-4].*'
 make_dataset mf35-256 $CROP_256 $DOMAIN $MEDIAN3 $COMPRESS
-PATTERN='*[0-7][0-9][13579].tif'
+PATTERN='ucid*[5-9].*'
 make_dataset mf35-256 $CROP_256 $DOMAIN $MEDIAN5 $COMPRESS
 
-PATTERN='ucid00[0-1]*.tif'
+PATTERN='ucid*[0-1].*'
 make_dataset all-256 $CROP_256 $DOMAIN             $COMPRESS
-PATTERN='ucid00[2-3]*.tif'
+PATTERN='ucid*[2-3].*'
 make_dataset all-256 $CROP_256 $DOMAIN $AVERAGE    $COMPRESS
-PATTERN='ucid00[4-5]*.tif'
+PATTERN='ucid*[4-5].*'
 make_dataset all-256 $CROP_256 $DOMAIN $GAUSSIAN   $COMPRESS
-PATTERN='ucid00[6-7]*.tif'
+PATTERN='ucid*[6-7].*'
 make_dataset all-256 $CROP_256 $DOMAIN $RESIZE_256 $COMPRESS
 
 # anti dataset

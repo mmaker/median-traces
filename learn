@@ -9,7 +9,7 @@ fi
 DPATH="$1"
 
 source config
-LEARN="python median_traces.py learn --path=$DPATH  --regex=$PATTERN_LEARN "
+LEARN="python median_traces.py learn --path=$DPATH --regex=$PATTERN_LEARN "
 
 $LEARN mf5 ori
 $LEARN mf5 gau
