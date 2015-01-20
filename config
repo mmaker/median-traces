@@ -1,7 +1,7 @@
 PARALLEL="parallel"
 ANTI="`pwd`/contrib/run_anti_median.sh /usr/local//MATLAB/R2014a/"
-THRESHOLDS=$(printf '2\n5')
-NOISE_RANGES=("5 9" "7 11" "8 12")
+THRESHOLDS=$(printf '2')
+NOISE_RANGES=("3 7" "5 9")
 
 PATTERN_TEST='ucid01*.*'
 PATTERN_LEARN='ucid00*.*'

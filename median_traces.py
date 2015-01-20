@@ -38,7 +38,7 @@ from sklearn import svm, cross_validation, decomposition
 from sklearn.grid_search import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import normalize
-
+from sklearn.metrics import confusion_matrix
 
 
 __version__ = float('nan')
@@ -237,9 +237,11 @@ def test(a, b, targets, targets_class=None):
         clf = learn(a, b)
 
     # Create test cases
-    predictions = [a if a in file else b for file in files]
-    score = clf.score(tests, predictions)
-    print('{:3.3f}'.format(score))
+    desidered = [a if a in file else b for file in files]
+    predicted = clf.predict(tests)
+    cm = confusion_matrix(desidered, predicted)
+    accuracy =  clf.score(tests, desidered)
+    print(accuracy, cm.tolist())
 
 def measure(a, b, measuref=psnr):
     """
@@ -256,8 +258,7 @@ def measure(a, b, measuref=psnr):
              for file_a, file_b in zip(a_files, b_files)]
 
     mean, var = np.mean(simil), np.var(simil)
-    print('{:4.3f} {:5.4f}'.format(mean, var))
-
+    print('{:4.3f}'.format(mean))
     return mean, var
 
 

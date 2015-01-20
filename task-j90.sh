@@ -7,6 +7,6 @@
 cd /home/michele/median-traces
 
 ./learn dataset-j90/ || exit 1
-./test  dataset-j90/ || exit 2
+#./test  dataset-j90/ || exit 2
 
 exit 0
