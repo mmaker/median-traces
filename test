@@ -8,7 +8,7 @@ fi
 
 DPATH="$1"
 
-source config
+. config
 TEST="python median_traces.py test -p $DPATH -r $PATTERN_TEST "
 MEASURE_PSNR="python median_traces.py measure psnr -r $PATTERN_TEST "
 
@@ -30,7 +30,7 @@ do_test()
     printf "$a\t$b\t$t\t[$range]\t$accuracy\t$psnr\t$ssim\n"
 }
 
-printf "MEDIAN\tFILTER\tTHRESHOLD\tNOISE\tACCURACY/CONFUSION MATRIX\tPSNR\n"
+printf "MEDIAN\tFILTER\tTHRESHOLD\tNOISE\tACCURACY\tCONFUSION MATRIX\tPSNR\n"
 for t in $THRESHOLDS; do
     for range in "${NOISE_RANGES[@]}"; do
         do_test mf3      ori     $t $range

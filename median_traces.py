@@ -241,7 +241,7 @@ def test(a, b, targets, targets_class=None):
     predicted = clf.predict(tests)
     cm = confusion_matrix(desidered, predicted)
     accuracy =  clf.score(tests, desidered)
-    print(accuracy, cm.tolist())
+    print('{acc:.3f}\t{cm}'.format(acc=accuracy, cm=cm.tolist()))
 
 def measure(a, b, measuref=psnr):
     """
